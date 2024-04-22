@@ -2,7 +2,7 @@
 
 ## 安装
 
-使用`open-ethereum-pool`作为矿池实现,比较简单的单矿工实现,矿工分账需要单独开发
+使用`open-ethereum-pool`作为矿池实现,比较简单的单矿工实现
 
     ### 构建后端
     git clone https://github.com/fedimoss/open-ethereum-pool.git
