@@ -12,7 +12,7 @@ import (
 // Allow only lowercase hexadecimal with 0x prefix
 var noncePattern = regexp.MustCompile("^0x[0-9a-f]{16}$")
 var hashPattern = regexp.MustCompile("^0x[0-9a-f]{64}$")
-var workerPattern = regexp.MustCompile("^[0-9a-zA-Z-_]{1,8}$")
+var workerPattern = regexp.MustCompile("^[0-9a-zA-Z-_]{1,20}$")
 
 // Stratum
 func (s *ProxyServer) handleLoginRPC(cs *Session, params []string, id string) (bool, *ErrorReply) {
@@ -39,8 +39,19 @@ func (s *ProxyServer) handleGetWorkRPC(cs *Session) ([]string, *ErrorReply) {
 		return nil, &ErrorReply{Code: 0, Message: "Work not ready"}
 	}
 	return []string{t.Header, t.Seed, s.diff}, nil
+	//return []string{t.Header, t.Seed, s.diff, util.ToHex(int64(t.Height))}, nil
 }
 
+/*
+func (s *ProxyServer) handleGetWorkStratumRPC(cs *Session) ([]string, *ErrorReply) {
+	t := s.currentBlockTemplate()
+	if t == nil || len(t.Header) == 0 || s.isSick() {
+		return nil, &ErrorReply{Code: 0, Message: "Work not ready"}
+	}
+	//return []string{t.Header, t.Seed, s.diff}, nil
+	return []string{t.Header, t.Seed, s.diff, util.ToHex(int64(t.Height))}, nil
+}
+*/
 // Stratum
 func (s *ProxyServer) handleTCPSubmitRPC(cs *Session, id string, params []string) (bool, *ErrorReply) {
 	s.sessionsMu.RLock()
@@ -63,13 +74,20 @@ func (s *ProxyServer) handleSubmitRPC(cs *Session, login, id string, params []st
 		return false, &ErrorReply{Code: -1, Message: "Invalid params"}
 	}
 
+	if cs.stratum != 0 {
+		for i := 0; i <= 2; i++ {
+			if params[i][0:2] != "0x" {
+				params[i] = "0x" + params[i]
+			}
+		}
+	}
 	if !noncePattern.MatchString(params[0]) || !hashPattern.MatchString(params[1]) || !hashPattern.MatchString(params[2]) {
 		s.policy.ApplyMalformedPolicy(cs.ip)
 		log.Printf("Malformed PoW result from %s@%s %v", login, cs.ip, params)
 		return false, &ErrorReply{Code: -1, Message: "Malformed PoW result"}
 	}
 	t := s.currentBlockTemplate()
-	exist, validShare := s.processShare(login, id, cs.ip, t, params)
+	exist, validShare := s.processShare(login, id, cs.ip, t, params, cs.stratum)
 	ok := s.policy.ApplySharePolicy(cs.ip, !exist && validShare)
 
 	if exist {

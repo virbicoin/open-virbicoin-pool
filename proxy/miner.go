@@ -6,48 +6,76 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/etclabscore/go-etchash"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/fedimoss/open-ethereum-pool/util"
+	ethash "github.com/hackmod/ethereum-ethash"
 )
+
+var hasher = ethash.New()
 
 var (
-	maxUint256                  = new(big.Int).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0))
-	hasher     *etchash.Etchash = nil
+	maxUint256 = new(big.Int).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0))
 )
 
-func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, params []string) (bool, bool) {
-	if hasher == nil {
-		hasher = etchash.New(nil, nil)
-	}
+func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, params []string, stratum int) (bool, bool) {
+	// Now, the function received some work with login id and worker name and all information, ready to be processed
+	// and checked if it is a valid work or not, and if it is a block or not and write to db accordingly
 	nonceHex := params[0]
 	hashNoNonce := params[1]
 	mixDigest := params[2]
 	nonce, _ := strconv.ParseUint(strings.Replace(nonceHex, "0x", "", -1), 16, 64)
 	shareDiff := s.config.Proxy.Difficulty
 
-	hashNoNonceTmp := common.HexToHash(hashNoNonce)
-	mixDigestTmp, hashTmp := hasher.Compute(t.Height, hashNoNonceTmp, nonce)
+	algo := ""
 
-	// check mixDigest
-	if mixDigestTmp.Hex() != mixDigest {
+	var result common.Hash
+	if stratum == 1 {
+		hashNoNonceTmp := common.HexToHash(params[2])
+
+		_, mixDigestTmp, hashTmp := hasher.ComputeWithAlgo(t.Height, hashNoNonceTmp, nonce, algo)
+		params[1] = hashNoNonceTmp.Hex()
+		params[2] = mixDigestTmp.Hex()
+		hashNoNonce = params[1]
+		result = hashTmp
+	} else {
+		hashNoNonceTmp := common.HexToHash(hashNoNonce)
+		_, mixDigestTmp, hashTmp := hasher.ComputeWithAlgo(t.Height, hashNoNonceTmp, nonce, algo)
+
+		// check mixDigest
+		if mixDigestTmp.Hex() != mixDigest {
+			return false, false
+		}
+		result = hashTmp
+	}
+
+	// Block "difficulty" is BigInt
+	// NiceHash "difficulty" is float64 ...
+	// diffFloat => target; then: diffInt = 2^256 / target
+	shareDiffCalc := util.TargetHexToDiff(result.Hex()).Int64()
+	shareDiffFloat := util.DiffIntToFloat(shareDiffCalc)
+	if shareDiffFloat < 0.0001 {
+		log.Printf("share difficulty too low, %f < %d, from %v@%v", shareDiffFloat, t.Difficulty, login, ip)
 		return false, false
 	}
 
 	h, ok := t.headers[hashNoNonce]
 	if !ok {
 		log.Printf("Stale share from %v@%v", login, ip)
+		// Here we have a stale share, we need to create a redis function as follows
+		// CASE1: stale Share
+		// s.backend.WriteWorkerShareStatus(login, id, valid bool, stale bool, invalid bool)
 		return false, false
 	}
 
 	// check share difficulty
 	shareTarget := new(big.Int).Div(maxUint256, big.NewInt(shareDiff))
-	if hashTmp.Big().Cmp(shareTarget) > 0 {
+	if result.Big().Cmp(shareTarget) > 0 {
 		return false, false
 	}
 
 	// check target difficulty
 	target := new(big.Int).Div(maxUint256, big.NewInt(h.diff.Int64()))
-	if hashTmp.Big().Cmp(target) <= 0 {
+	if result.Big().Cmp(target) <= 0 {
 		ok, err := s.rpc().SubmitBlock(params)
 		if err != nil {
 			log.Printf("Block submission failure at height %v for %v: %v", h.height, t.Header, err)
