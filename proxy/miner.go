@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
+	ethash "github.com/fedimoss/ethereum-ethash"
 	"github.com/fedimoss/open-ethereum-pool/util"
-	ethash "github.com/hackmod/ethereum-ethash"
 )
 
 var hasher = ethash.New()
