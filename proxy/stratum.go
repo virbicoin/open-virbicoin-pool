@@ -157,7 +157,7 @@ func (cs *Session) handleTCPMessage(s *ProxyServer, req *StratumReq) error {
 			return cs.sendStratumError(req.Id, err)
 		}
 
-		if params[1] != "EthereumStratum/1.0.0" {
+		if len(params) < 2 || params[1] != "EthereumStratum/1.0.0" {
 			log.Println("Unsupported stratum version from ", cs.ip)
 			return cs.sendStratumError(req.Id, "unsupported stratum version")
 		}
@@ -225,7 +225,7 @@ func (cs *Session) handleTCPMessage(s *ProxyServer, req *StratumReq) error {
 			}
 			cs.ExtranonceSub = true
 			req := JSONStratumReq{
-				Id:     nil,
+				Id:     0,
 				Method: "mining.set_extranonce",
 				Params: []interface{}{
 					cs.Extranonce,
@@ -346,7 +346,7 @@ func (cs *Session) pushNewJob(result interface{}) error {
 
 		t := result.(*[]string)
 		cs.JobDetails = jobDetails{
-			JobID:      randomHex(8),
+			JobID:      randomHex(12),
 			SeedHash:   (*t)[1],
 			HeaderHash: (*t)[0],
 			//Height:     (*t)[3],
@@ -376,6 +376,9 @@ func (cs *Session) pushNewJob(result interface{}) error {
 				true,
 			},
 		}
+
+		b, _ := json.Marshal(&resp)
+		fmt.Println("------------------------" + string(b))
 		return cs.enc.Encode(&resp)
 	}
 
@@ -452,7 +455,7 @@ func (cs *Session) sendJob(s *ProxyServer, id int, newjob bool) error {
 		//block, err := rpc.GetBlockByHeight(0)
 		//fmt.Printf("---height is %v\n", block)
 		cs.JobDetails = jobDetails{
-			JobID:      randomHex(16),
+			JobID:      randomHex(12),
 			SeedHash:   reply[1],
 			HeaderHash: reply[0],
 			//Height:     reply[3],
@@ -478,7 +481,8 @@ func (cs *Session) sendJob(s *ProxyServer, id int, newjob bool) error {
 			true,
 		},
 	}
-
+	b, _ := json.Marshal(&resp)
+	fmt.Println("------------------------" + string(b))
 	return cs.sendTCPReq(resp)
 }
 

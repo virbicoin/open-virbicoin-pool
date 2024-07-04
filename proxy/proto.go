@@ -11,7 +11,7 @@ type JSONRpcReq struct {
 type JSONStratumReq struct {
 	Method string      `json:"method"`
 	Params interface{} `json:"params"`
-	Id     interface{} `json:"id"`
+	Id     int         `json:"id"`
 }
 
 type StratumReq struct {
