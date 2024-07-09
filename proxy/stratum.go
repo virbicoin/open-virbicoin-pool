@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"math/rand"
@@ -110,7 +109,7 @@ func (s *ProxyServer) handleTCPClient(cs *Session) error {
 }
 
 func (cs *Session) handleTCPMessage(s *ProxyServer, req *StratumReq) error {
-	fmt.Println("-------------------::::" + req.Method)
+	//fmt.Println("-------------------::::" + req.Method)
 	// Handle RPC methods
 	switch req.Method {
 	case "eth_submitLogin":
@@ -377,8 +376,8 @@ func (cs *Session) pushNewJob(result interface{}) error {
 			},
 		}
 
-		b, _ := json.Marshal(&resp)
-		fmt.Println("------------------------" + string(b))
+		//b, _ := json.Marshal(&resp)
+		//fmt.Println("------------------------" + string(b))
 		return cs.enc.Encode(&resp)
 	}
 
@@ -481,8 +480,8 @@ func (cs *Session) sendJob(s *ProxyServer, id int, newjob bool) error {
 			true,
 		},
 	}
-	b, _ := json.Marshal(&resp)
-	fmt.Println("------------------------" + string(b))
+	//b, _ := json.Marshal(&resp)
+	//fmt.Println("------------------------" + string(b))
 	return cs.sendTCPReq(resp)
 }
 
