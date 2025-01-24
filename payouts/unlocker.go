@@ -8,9 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fedimoss/open-ethereum-pool/rpc"
-	"github.com/fedimoss/open-ethereum-pool/storage"
-	"github.com/fedimoss/open-ethereum-pool/util"
+	"github.com/ethereum/go-ethereum/common/math"
+
+	"github.com/virbicoin/open-virbicoin-pool/rpc"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
 type UnlockerConfig struct {
@@ -29,19 +31,12 @@ type UnlockerConfig struct {
 const minDepth = 16
 const byzantiumHardForkHeight = 4370000
 
-//var homesteadReward = math.MustParseBig256("5000000000000000000")
-//var byzantiumReward = math.MustParseBig256("3000000000000000000")
+var homesteadReward = math.MustParseBig256("4000000000000000000")
+var byzantiumReward = math.MustParseBig256("3000000000000000000")
 
 // Donate 10% from pool fees to developers
-//const donationFee = 0.0
-//const donationAccount = "0xd6364578b600721ba1fe9f5115b250deae030455"
-
-var (
-	initialReward = big.NewInt(5e+18)
-	//initialReward, _  = big.NewInt(0).SetString("5000000000000000000", 10)       // 初始区块奖励,例如5ETH
-	HalvingPeriod     = big.NewInt(8400000)                                       // 减半周期,例如8400000个区块
-	TotalSupplyCap, _ = big.NewInt(0).SetString("84000000000000000000000000", 10) // 总量上限,例如8400万ETH
-)
+const donationFee = 10.0
+const donationAccount = "0xb85150eb365e7df0941f0cf08235f987ba91506a"
 
 type BlockUnlocker struct {
 	config   *UnlockerConfig
@@ -102,7 +97,7 @@ type UnlockResult struct {
  * Having very likely incorrect height in database results in a weird block unlocking scheme,
  * when I have to check what the hell we actually found and traversing all the blocks with height-N and height+N
  * to make sure we will find it. We can't rely on round height here, it's just a reference point.
- * ISSUE: https://github.com/ethereum/go-ethereum/issues/2333
+ * ISSUE: https://github.com/virbicoin/go-virbicoin/issues/2333
  */
 func (u *BlockUnlocker) unlockCandidates(candidates []*storage.BlockData) (*UnlockResult, error) {
 	result := &UnlockResult{}
@@ -159,24 +154,22 @@ func (u *BlockUnlocker) unlockCandidates(candidates []*storage.BlockData) (*Unlo
 					return nil, fmt.Errorf("Error while retrieving uncle of block %v from node", height)
 				}
 
-				/*
-					// Found uncle
-					if matchCandidate(uncle, candidate) {
-						orphan = false
-						result.uncles++
+				// Found uncle
+				if matchCandidate(uncle, candidate) {
+					orphan = false
+					result.uncles++
 
-						err := handleUncle(height, uncle, candidate)
-						if err != nil {
-							u.halt = true
-							u.lastFail = err
-							return nil, err
-						}
-						result.maturedBlocks = append(result.maturedBlocks, candidate)
-						log.Printf("Mature uncle %v/%v of reward %v with hash: %v", candidate.Height, candidate.UncleHeight,
-							util.FormatReward(candidate.Reward), uncle.Hash[0:10])
-						break
+					err := handleUncle(height, uncle, candidate)
+					if err != nil {
+						u.halt = true
+						u.lastFail = err
+						return nil, err
 					}
-				*/
+					result.maturedBlocks = append(result.maturedBlocks, candidate)
+					log.Printf("Mature uncle %v/%v of reward %v with hash: %v", candidate.Height, candidate.UncleHeight,
+						util.FormatReward(candidate.Reward), uncle.Hash[0:10])
+					break
+				}
 			}
 			// Found block or uncle
 			if !orphan {
@@ -230,11 +223,9 @@ func (u *BlockUnlocker) handleBlock(block *rpc.GetBlockReply, candidate *storage
 	}
 
 	// Add reward for including uncles
-	/*
-		uncleReward := getRewardForUncle(candidate.Height)
-		rewardForUncles := big.NewInt(0).Mul(uncleReward, big.NewInt(int64(len(block.Uncles))))
-		reward.Add(reward, rewardForUncles)
-	*/
+	uncleReward := getRewardForUncle(candidate.Height)
+	rewardForUncles := big.NewInt(0).Mul(uncleReward, big.NewInt(int64(len(block.Uncles))))
+	reward.Add(reward, rewardForUncles)
 
 	candidate.Orphan = false
 	candidate.Hash = block.Hash
@@ -242,21 +233,20 @@ func (u *BlockUnlocker) handleBlock(block *rpc.GetBlockReply, candidate *storage
 	return nil
 }
 
-/*
-	func handleUncle(height int64, uncle *rpc.GetBlockReply, candidate *storage.BlockData) error {
-		uncleHeight, err := strconv.ParseInt(strings.Replace(uncle.Number, "0x", "", -1), 16, 64)
-		if err != nil {
-			return err
-		}
-		reward := getUncleReward(uncleHeight, height)
-		candidate.Height = height
-		candidate.UncleHeight = uncleHeight
-		candidate.Orphan = false
-		candidate.Hash = uncle.Hash
-		candidate.Reward = reward
-		return nil
+func handleUncle(height int64, uncle *rpc.GetBlockReply, candidate *storage.BlockData) error {
+	uncleHeight, err := strconv.ParseInt(strings.Replace(uncle.Number, "0x", "", -1), 16, 64)
+	if err != nil {
+		return err
 	}
-*/
+	reward := getUncleReward(uncleHeight, height)
+	candidate.Height = height
+	candidate.UncleHeight = uncleHeight
+	candidate.Orphan = false
+	candidate.Hash = uncle.Hash
+	candidate.Reward = reward
+	return nil
+}
+
 func (u *BlockUnlocker) unlockPendingBlocks() {
 	if u.halt {
 		log.Println("Unlocking suspended due to last critical error:", u.lastFail)
@@ -471,14 +461,12 @@ func (u *BlockUnlocker) calculateRewards(block *storage.BlockData) (*big.Rat, *b
 		revenue.Add(revenue, extraReward)
 	}
 
-	/*
-		if u.config.Donate {
-			var donation = new(big.Rat)
-			poolProfit, donation = chargeFee(poolProfit, donationFee)
-			login := strings.ToLower(donationAccount)
-			rewards[login] += weiToShannonInt64(donation)
-		}
-	*/
+	if u.config.Donate {
+		var donation = new(big.Rat)
+		poolProfit, donation = chargeFee(poolProfit, donationFee)
+		login := strings.ToLower(donationAccount)
+		rewards[login] += weiToShannonInt64(donation)
+	}
 
 	if len(u.config.PoolFeeAddress) != 0 {
 		address := strings.ToLower(u.config.PoolFeeAddress)
@@ -514,85 +502,25 @@ func weiToShannonInt64(wei *big.Rat) int64 {
 }
 
 func getConstReward(height int64) *big.Int {
-	/*
-		if height >= byzantiumHardForkHeight {
-			return new(big.Int).Set(byzantiumReward)
-		}
-		return new(big.Int).Set(homesteadReward)
-	*/
-	// 获取当前区块号
-	currentBlockNumber := big.NewInt(height)
-	// 计算当前是第几个减半周期
-	halvingEpoch := big.NewInt(0)
-	h := big.NewInt(0)
-	//第100个块不应该减半,先加上临界值,结果-1
-	h = h.Add(currentBlockNumber, HalvingPeriod)
-	h = h.Sub(h, big.NewInt(1))
-	halvingEpoch.Div(h, HalvingPeriod)
-	halvingEpoch.Sub(halvingEpoch, big.NewInt(1))
-
-	// 根据块高计算已经发放的奖励
-	totalSupply := big.NewInt(0)
-	//fmt.Println("state.currentBlockNumber:" + currentBlockNumber.String())
-	//fmt.Println("halvingEpoch:halvingEpoch.Div(currentBlockNumber, HalvingPeriod)" + halvingEpoch.String())
-	//halvingEpoch.Add(halvingEpoch, CurrentHalvingEpoch)
-	////fmt.Println("halvingEpoch:halvingEpoch.Add(halvingEpoch, CurrentHalvingEpoch)" + halvingEpoch.String())
-	// 根据减半周期计算区块奖励
-	blockReward, _ := big.NewInt(0).SetString(initialReward.String(), 10)
-
-	for i := big.NewInt(0); i.Cmp(halvingEpoch) < 0; i.Add(i, big.NewInt(1)) {
-		//本次区间的奖励
-		halvingReward := big.NewInt(0).Mul(HalvingPeriod, blockReward)
-		//计入总额
-		totalSupply.Add(totalSupply, halvingReward)
-		//fmt.Println("for blockReward:" + i.String() + "-----:" + blockReward.String())
-		blockReward.Div(blockReward, big.NewInt(2))
+	if height >= byzantiumHardForkHeight {
+		return new(big.Int).Set(byzantiumReward)
 	}
-
-	if currentBlockNumber.Cmp(HalvingPeriod) == 0 { //第一个临界值比较特殊
-		//本次区间的奖励
-		halvingReward := big.NewInt(0).Mul(HalvingPeriod, blockReward)
-		//计入总额
-		totalSupply.Add(totalSupply, halvingReward)
-	}
-
-	//求余,获取最新的块高
-	modHeight := big.NewInt(0).Mod(currentBlockNumber, HalvingPeriod)
-	//本次区间的奖励
-	totalSupply.Add(totalSupply, big.NewInt(0).Mul(modHeight, blockReward))
-
-	//fmt.Println("blockReward:" + blockReward.String())
-	//fmt.Println("currentBlockNumber:"+currentBlockNumber.String(), "  totalSupply:"+totalSupply.String())
-	//fmt.Println("totalSupply:" + totalSupply.String())
-
-	// 检查是否达到总量上限,如果超过总量上限,不再发放奖励
-	/*
-		if state.TotalSupply.Add(state.TotalSupply, blockReward).Cmp(TotalSupplyCap) > 0 {
-			blockReward.Set(big.NewInt(0))
-		}
-	*/
-	if totalSupply.Cmp(TotalSupplyCap) > 0 {
-		blockReward.Set(big.NewInt(0))
-	}
-	//fmt.Println("currentBlockNumber:" + currentBlockNumber.String() + "  totalSupply:" + totalSupply.String() + "   blockReward:" + blockReward.String())
-	// 发放奖励
-	return blockReward
+	return new(big.Int).Set(homesteadReward)
 }
 
-/*
-	func getRewardForUncle(height int64) *big.Int {
-		reward := getConstReward(height)
-		return new(big.Int).Div(reward, new(big.Int).SetInt64(32))
-	}
+func getRewardForUncle(height int64) *big.Int {
+	reward := getConstReward(height)
+	return new(big.Int).Div(reward, new(big.Int).SetInt64(32))
+}
 
-	func getUncleReward(uHeight, height int64) *big.Int {
-		reward := getConstReward(height)
-		k := height - uHeight
-		reward.Mul(big.NewInt(8-k), reward)
-		reward.Div(reward, big.NewInt(8))
-		return reward
-	}
-*/
+func getUncleReward(uHeight, height int64) *big.Int {
+	reward := getConstReward(height)
+	k := height - uHeight
+	reward.Mul(big.NewInt(8-k), reward)
+	reward.Div(reward, big.NewInt(8))
+	return reward
+}
+
 func (u *BlockUnlocker) getExtraRewardForTx(block *rpc.GetBlockReply) (*big.Int, error) {
 	amount := new(big.Int)
 

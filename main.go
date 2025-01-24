@@ -1,4 +1,3 @@
-//go:build go1.9
 // +build go1.9
 
 package main
@@ -14,10 +13,10 @@ import (
 
 	"github.com/yvasiyarov/gorelic"
 
-	"github.com/fedimoss/open-ethereum-pool/api"
-	"github.com/fedimoss/open-ethereum-pool/payouts"
-	"github.com/fedimoss/open-ethereum-pool/proxy"
-	"github.com/fedimoss/open-ethereum-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/api"
+	"github.com/virbicoin/open-virbicoin-pool/payouts"
+	"github.com/virbicoin/open-virbicoin-pool/proxy"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
 )
 
 var cfg proxy.Config

@@ -1,6 +1,6 @@
 {
-	"threads": 2,
-	"coin": "eth",
+	"threads": 1,
+	"coin": "vbc",
 	"name": "main",
 
 	"proxy": {
@@ -11,7 +11,7 @@
 		"behindReverseProxy": false,
 		"blockRefreshInterval": "120ms",
 		"stateUpdateInterval": "3s",
-		"difficulty": 200000000,
+		"difficulty": 2000000000,
 		"hashrateExpiration": "3h",
 
 		"healthCheck": true,
@@ -47,7 +47,7 @@
 	},
 
 	"api": {
-		"enabled": true,
+		"enabled": false,
 		"purgeOnly": false,
 		"purgeInterval": "10m",
 		"listen": "0.0.0.0:8080",
@@ -63,12 +63,12 @@
 	"upstream": [
 		{
 			"name": "main",
-			"url": "http://127.0.0.1:6385",
+			"url": "http://127.0.0.1:8329",
 			"timeout": "10s"
 		},
 		{
 			"name": "backup",
-			"url": "http://127.0.0.2:6385",
+			"url": "http://127.0.0.2:8329",
 			"timeout": "10s"
 		}
 	],
@@ -84,20 +84,20 @@
 		"enabled": false,
 		"poolFee": 1.0,
 		"poolFeeAddress": "",
-		"donate": true,
+		"donate": false,
 		"depth": 120,
 		"immatureDepth": 20,
 		"keepTxFees": false,
 		"interval": "10m",
-		"daemon": "http://127.0.0.1:6385",
+		"daemon": "http://127.0.0.1:8329",
 		"timeout": "10s"
 	},
 
 	"payouts": {
 		"enabled": false,
-		"requirePeers": 25,
+		"requirePeers": 2,
 		"interval": "120m",
-		"daemon": "http://127.0.0.1:6385",
+		"daemon": "http://127.0.0.1:8329",
 		"timeout": "10s",
 		"address": "0x0",
 		"gas": "21000",

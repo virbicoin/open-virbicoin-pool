@@ -9,8 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/fedimoss/open-ethereum-pool/storage"
-	"github.com/fedimoss/open-ethereum-pool/util"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
 type Config struct {

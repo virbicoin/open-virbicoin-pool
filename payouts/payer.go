@@ -10,9 +10,9 @@ import (
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 
-	"github.com/fedimoss/open-ethereum-pool/rpc"
-	"github.com/fedimoss/open-ethereum-pool/storage"
-	"github.com/fedimoss/open-ethereum-pool/util"
+	"github.com/virbicoin/open-virbicoin-pool/rpc"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
 const txCheckInterval = 5 * time.Second

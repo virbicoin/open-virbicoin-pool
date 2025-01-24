@@ -1,108 +1,114 @@
 {
-    "threads": 8,
-    "coin": "eth",
-    "name": "main",
+	"threads": 1,
+	"coin": "vbc",
+	"name": "main",
 
-    "proxy": {
-        "enabled": true,
-        "listen": "0.0.0.0:8888",
-        "limitHeadersSize": 1024,
-        "limitBodySize": 256,
-        "behindReverseProxy": false,
-        "blockRefreshInterval": "120ms",
-        "stateUpdateInterval": "3s",
-        "difficulty": 17179869184,
-        "hashrateExpiration": "3h",
-        "healthCheck": true,
-        "maxFails": 100,
+	"proxy": {
+		"enabled": true,
+		"listen": "0.0.0.0:8881",
+		"limitHeadersSize": 1024,
+		"limitBodySize": 256,
+		"behindReverseProxy": true,
+		"blockRefreshInterval": "120ms",
+		"stateUpdateInterval": "3s",
+		"difficulty": 2000000000,
+		"hashrateExpiration": "3h",
 
-        "stratum": {
-            "enabled": true,
-            "listen": "0.0.0.0:8008",
-            "timeout": "120s",
-            "maxConn": 8192
-        },
+		"healthCheck": true,
+		"maxFails": 100,
 
-        "policy": {
-            "workers": 1000,
-            "resetInterval": "60m",
-            "refreshInterval": "1m",
-            "banning": {
-                "enabled": false,
-                "ipset": "blacklist",
-                "timeout": 1800,
-                "invalidPercent": 30,
-                "checkThreshold": 30,
-                "malformedLimit": 5
-            },
-            "limits": {
-                "enabled": false,
-                "limit": 30,
-                "grace": "5m",
-                "limitJump": 10
-            }
-        }
-    },
+		"stratum": {
+			"enabled": true,
+			"listen": "0.0.0.0:8001",
+			"timeout": "120s",
+			"maxConn": 8192
+		},
 
-    "api": {
-        "enabled": true,
-        "purgeOnly": false,
-        "purgeInterval": "10m",
-        "listen": "0.0.0.0:8080",
-        "statsCollectInterval": "5s",
-        "hashrateWindow": "30m",
-        "hashrateLargeWindow": "3h",
-        "luckWindow": [64, 128, 256],
-        "payments": 50,
-        "blocks": 50,
-		"purgeOnly": false
-    },
+		"policy": {
+			"workers": 8,
+			"resetInterval": "60m",
+			"refreshInterval": "1m",
 
-    "upstreamCheckInterval": "5s",
-    "upstream": [
-        {
-            "name": "main",
-            "url": "http://127.0.0.1:8545",
-            "timeout": "10s"
-        }
-    ],
+			"banning": {
+				"enabled": false,
+				"ipset": "blacklist",
+				"timeout": 1800,
+				"invalidPercent": 30,
+				"checkThreshold": 30,
+				"malformedLimit": 5
+			},
+			"limits": {
+				"enabled": false,
+				"limit": 30,
+				"grace": "5m",
+				"limitJump": 10
+			}
+		}
+	},
 
-    "redis": {
-        "endpoint": "127.0.0.1:6379",
-        "poolSize": 10,
-        "database": 0,
-        "password": ""
-    },
+	"api": {
+		"enabled": true,
+		"purgeOnly": false,
+		"purgeInterval": "10m",
+		"listen": "0.0.0.0:8080",
+		"statsCollectInterval": "5s",
+		"hashrateWindow": "30m",
+		"hashrateLargeWindow": "3h",
+		"luckWindow": [64, 128, 256],
+		"payments": 30,
+		"blocks": 50
+	},
 
-    "unlocker": {
-        "enabled": false,
-        "poolFee": 10.0,
-        "poolFeeAddress": "0xDB53d4eBce983Bbe87a42555300C443037234B0C",
-        "donate": false,
-        "depth": 120,
-        "immatureDepth": 20,
-        "keepTxFees": false,
-        "interval": "10m",
-        "daemon": "http://127.0.0.1:8545",
-        "timeout": "10s"
-    },
+	"upstreamCheckInterval": "5s",
+	"upstream": [
+		{
+			"name": "main",
+			"url": "http://127.0.0.1:8329",
+			"timeout": "10s"
+		},
+		{
+			"name": "backup",
+			"url": "https://rpc.digitalregion.jp",
+			"timeout": "10s"
+		}
+	],
 
-    "payouts": {
-        "enabled": false,
-        "requirePeers": 25,
-        "interval": "12h",
-        "daemon": "http://127.0.0.1:8545",
-        "timeout": "10s",
-        "address": "0x79d7150f66a1945b3c86c257f83a7176dbaa54b9",
-        "gas": "21000",
-        "gasPrice": "50000000000",
-        "autoGas": true,
-        "threshold": 500000000,
-        "bgsave": false
-    },
+	"redis": {
+		"endpoint": "127.0.0.1:6379",
+		"poolSize": 10,
+		"database": 0,
+		"password": ""
+	},
 
-    "newrelicEnabled": false,
-    "newrelicName": "MyEtherProxy",
-    "newrelicKey": "SECRET_KEY",
-    "newrelicVerbose": false
+	"unlocker": {
+		"enabled": true,
+		"poolFee": 1.0,
+		"poolFeeAddress": "0x47C93fd5a9fdf1516FfeabB74d0b5A44786d7026",
+		"donate": true,
+		"depth": 120,
+		"immatureDepth": 20,
+		"keepTxFees": false,
+		"interval": "10m",
+		"daemon": "http://127.0.0.1:8329",
+		"timeout": "10s"
+	},
+
+	"payouts": {
+		"enabled": true,
+		"requirePeers": 2,
+		"interval": "1m",
+		"daemon": "http://127.0.0.1:8329",
+		"timeout": "10s",
+		"address": "0x47C93fd5a9fdf1516FfeabB74d0b5A44786d7026",
+		"gas": "21000",
+		"gasPrice": "50000000000",
+		"autoGas": true,
+		"threshold": 500000000,
+		"bgsave": false
+	},
+
+	"newrelicEnabled": false,
+	"newrelicName": "MyEtherProxy",
+	"newrelicKey": "SECRET_KEY",
+	"newrelicVerbose": false
 }

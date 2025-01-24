@@ -1,10 +1,10 @@
 package proxy
 
 import (
-	"github.com/fedimoss/open-ethereum-pool/api"
-	"github.com/fedimoss/open-ethereum-pool/payouts"
-	"github.com/fedimoss/open-ethereum-pool/policy"
-	"github.com/fedimoss/open-ethereum-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/api"
+	"github.com/virbicoin/open-virbicoin-pool/payouts"
+	"github.com/virbicoin/open-virbicoin-pool/policy"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
 )
 
 type Config struct {

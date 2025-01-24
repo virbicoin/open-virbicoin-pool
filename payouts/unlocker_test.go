@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fedimoss/open-ethereum-pool/rpc"
-	"github.com/fedimoss/open-ethereum-pool/storage"
+	"github.com/virbicoin/open-virbicoin-pool/rpc"
+	"github.com/virbicoin/open-virbicoin-pool/storage"
 )
 
 func TestMain(m *testing.M) {
@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCalculateRewards(t *testing.T) {
-	blockReward, _ := new(big.Rat).SetString("5000000000000000000")
+	blockReward, _ := new(big.Rat).SetString("4000000000000000000")
 	shares := map[string]int64{"0x0": 1000000, "0x1": 20000, "0x2": 5000, "0x3": 10, "0x4": 1}
 	expectedRewards := map[string]int64{"0x0": 4877996431, "0x1": 97559929, "0x2": 24389982, "0x3": 48780, "0x4": 4878}
 	totalShares := int64(1025011)
@@ -36,8 +36,8 @@ func TestCalculateRewards(t *testing.T) {
 }
 
 func TestChargeFee(t *testing.T) {
-	orig, _ := new(big.Rat).SetString("5000000000000000000")
-	value, _ := new(big.Rat).SetString("5000000000000000000")
+	orig, _ := new(big.Rat).SetString("4000000000000000000")
+	value, _ := new(big.Rat).SetString("4000000000000000000")
 	expectedNewValue, _ := new(big.Rat).SetString("3750000000000000000")
 	expectedFee, _ := new(big.Rat).SetString("1250000000000000000")
 	newValue, fee := chargeFee(orig, 25.0)
@@ -78,7 +78,7 @@ func TestGetUncleReward(t *testing.T) {
 		7: "625000000000000000",
 	}
 	for i := int64(1); i < 8; i++ {
-		//rewards[i] = getUncleReward(1, i+1).String()
+		rewards[i] = getUncleReward(1, i+1).String()
 	}
 	for i, reward := range rewards {
 		if expectedRewards[i] != rewards[i] {
@@ -99,7 +99,7 @@ func TestGetByzantiumUncleReward(t *testing.T) {
 		7: "375000000000000000",
 	}
 	for i := int64(1); i < 8; i++ {
-		//rewards[i] = getUncleReward(byzantiumHardForkHeight, byzantiumHardForkHeight+i).String()
+		rewards[i] = getUncleReward(byzantiumHardForkHeight, byzantiumHardForkHeight+i).String()
 	}
 	for i, reward := range rewards {
 		if expectedRewards[i] != rewards[i] {
@@ -109,8 +109,7 @@ func TestGetByzantiumUncleReward(t *testing.T) {
 }
 
 func TestGetRewardForUngle(t *testing.T) {
-	//reward := getRewardForUncle(1).String()
-	reward := "156250000000000000"
+	reward := getRewardForUncle(1).String()
 	expectedReward := "156250000000000000"
 	if expectedReward != reward {
 		t.Errorf("Incorrect uncle bonus for height %v, expected %v vs %v", 1, expectedReward, reward)
@@ -118,8 +117,7 @@ func TestGetRewardForUngle(t *testing.T) {
 }
 
 func TestGetByzantiumRewardForUngle(t *testing.T) {
-	//reward := getRewardForUncle(byzantiumHardForkHeight).String()
-	reward := "93750000000000000"
+	reward := getRewardForUncle(byzantiumHardForkHeight).String()
 	expectedReward := "93750000000000000"
 	if expectedReward != reward {
 		t.Errorf("Incorrect uncle bonus for height %v, expected %v vs %v", byzantiumHardForkHeight, expectedReward, reward)

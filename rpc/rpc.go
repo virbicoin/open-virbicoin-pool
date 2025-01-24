@@ -11,10 +11,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
+	
 	"github.com/ethereum/go-ethereum/common/hexutil"
-
-	"github.com/fedimoss/open-ethereum-pool/util"
+	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
 type RPCClient struct {

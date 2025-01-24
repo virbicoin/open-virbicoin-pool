@@ -9,8 +9,8 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/fedimoss/open-ethereum-pool/rpc"
-	"github.com/fedimoss/open-ethereum-pool/util"
+	"github.com/virbicoin/open-virbicoin-pool/rpc"
+	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
 const maxBacklog = 3
@@ -65,13 +65,11 @@ func (s *ProxyServer) fetchBlockTemplate() {
 	}
 
 	pendingReply.Difficulty = util.ToHex(s.config.Proxy.Difficulty)
-	//heightStr := strings.Replace(reply[3], "0x", "", -1)
-	//height, _ := strconv.ParseUint(heightStr, 16, 64)
+
 	newTemplate := BlockTemplate{
-		Header: reply[0],
-		Seed:   reply[1],
-		Target: reply[2],
-		//Height: int64(reply[3]),
+		Header:               reply[0],
+		Seed:                 reply[1],
+		Target:               reply[2],
 		Height:               height,
 		Difficulty:           big.NewInt(diff),
 		GetPendingBlockCache: pendingReply,
