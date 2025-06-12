@@ -29,14 +29,16 @@ type UnlockerConfig struct {
 }
 
 const minDepth = 16
-const byzantiumHardForkHeight = 4370000
+const byzantiumHardForkHeight = 10000000
+const constantinopleHardForkHeight = 50000000
 
-var homesteadReward = math.MustParseBig256("4000000000000000000")
-var byzantiumReward = math.MustParseBig256("3000000000000000000")
+var homesteadReward = math.MustParseBig256("8000000000000000000")
+var byzantiumReward = math.MustParseBig256("6000000000000000000")
+var constantinopleReward = math.MustParseBig256("4000000000000000000")
 
 // Donate 10% from pool fees to developers
 const donationFee = 10.0
-const donationAccount = "0xb85150eb365e7df0941f0cf08235f987ba91506a"
+const donationAccount = "0x950302976387b43E042aeA242AE8DAB8e5C204D1"
 
 type BlockUnlocker struct {
 	config   *UnlockerConfig
@@ -502,6 +504,9 @@ func weiToShannonInt64(wei *big.Rat) int64 {
 }
 
 func getConstReward(height int64) *big.Int {
+	if height >= constantinopleHardForkHeight {
+		return new(big.Int).Set(constantinopleReward)
+	}
 	if height >= byzantiumHardForkHeight {
 		return new(big.Int).Set(byzantiumReward)
 	}
