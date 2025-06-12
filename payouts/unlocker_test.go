@@ -14,7 +14,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCalculateRewards(t *testing.T) {
-	blockReward, _ := new(big.Rat).SetString("8000000000000000000")
+	blockReward, _ := new(big.Rat).SetString("4000000000000000000")
 	shares := map[string]int64{"0x0": 1000000, "0x1": 20000, "0x2": 5000, "0x3": 10, "0x4": 1}
 	expectedRewards := map[string]int64{"0x0": 4877996431, "0x1": 97559929, "0x2": 24389982, "0x3": 48780, "0x4": 4878}
 	totalShares := int64(1025011)
@@ -36,10 +36,10 @@ func TestCalculateRewards(t *testing.T) {
 }
 
 func TestChargeFee(t *testing.T) {
-	orig, _ := new(big.Rat).SetString("8000000000000000000")
-	value, _ := new(big.Rat).SetString("8000000000000000000")
-	expectedNewValue, _ := new(big.Rat).SetString("6000000000000000000")
-	expectedFee, _ := new(big.Rat).SetString("2000000000000000000")
+	orig, _ := new(big.Rat).SetString("4000000000000000000")
+	value, _ := new(big.Rat).SetString("4000000000000000000")
+	expectedNewValue, _ := new(big.Rat).SetString("3000000000000000000")
+	expectedFee, _ := new(big.Rat).SetString("1000000000000000000")
 	newValue, fee := chargeFee(orig, 25.0)
 
 	if orig.Cmp(value) != 0 {
@@ -69,13 +69,13 @@ func TestWeiToShannonInt64(t *testing.T) {
 func TestGetUncleReward(t *testing.T) {
 	rewards := make(map[int64]string)
 	expectedRewards := map[int64]string{
-		1: "7000000000000000000",
-		2: "6000000000000000000",
-		3: "5000000000000000000",
-		4: "4000000000000000000",
-		5: "3000000000000000000",
-		6: "2000000000000000000",
-		7: "1000000000000000000",
+		1: "3500000000000000000",
+		2: "3000000000000000000",
+		3: "2500000000000000000",
+		4: "2000000000000000000",
+		5: "1500000000000000000",
+		6: "1000000000000000000",
+		7: "500000000000000000",
 	}
 	for i := int64(1); i < 8; i++ {
 		rewards[i] = getUncleReward(1, i+1).String()
@@ -90,13 +90,13 @@ func TestGetUncleReward(t *testing.T) {
 func TestGetByzantiumUncleReward(t *testing.T) {
 	rewards := make(map[int64]string)
 	expectedRewards := map[int64]string{
-		1: "7000000000000000000",
-		2: "6000000000000000000",
-		3: "5000000000000000000",
-		4: "4000000000000000000",
-		5: "3000000000000000000",
-		6: "2000000000000000000",
-		7: "1000000000000000000",
+		1: "3500000000000000000",
+		2: "3000000000000000000",
+		3: "2500000000000000000",
+		4: "2000000000000000000",
+		5: "1500000000000000000",
+		6: "1000000000000000000",
+		7: "500000000000000000",
 	}
 	for i := int64(1); i < 8; i++ {
 		rewards[i] = getUncleReward(byzantiumHardForkHeight, byzantiumHardForkHeight+i).String()
@@ -118,7 +118,7 @@ func TestGetRewardForUngle(t *testing.T) {
 
 func TestGetByzantiumRewardForUngle(t *testing.T) {
 	reward := getRewardForUncle(byzantiumHardForkHeight).String()
-	expectedReward := "250000000000000000"
+	expectedReward := "187500000000000000"
 	if expectedReward != reward {
 		t.Errorf("Incorrect uncle bonus for height %v, expected %v vs %v", byzantiumHardForkHeight, expectedReward, reward)
 	}
