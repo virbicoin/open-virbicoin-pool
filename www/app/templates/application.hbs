@@ -38,6 +38,9 @@
         {{#active-li currentWhen='miners'}}
           {{#link-to 'miners'}}
             <i class="fa fa-users"></i> Miners
+            {{#if model.minersTotal}}
+              <span class="badge alert-success">{{model.minersTotal}}</span>
+            {{/if}}
           {{/link-to}}
         {{/active-li}}
         {{#active-li currentWhen='about'}}
