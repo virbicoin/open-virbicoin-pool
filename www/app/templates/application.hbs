@@ -14,17 +14,17 @@
       <ul class="nav navbar-nav">
         {{#active-li currentWhen='index'}}
           {{#link-to 'index'}}
-            <i class="fa fa-home"></i> Home
+            <i class="fas fa-home"></i> Home
           {{/link-to}}
         {{/active-li}}
         {{#active-li currentWhen='help'}}
           {{#link-to 'help'}}
-            <i class="fa fa-rocket"></i> Help
+            <i class="fas fa-rocket"></i> Help
           {{/link-to}}
         {{/active-li}}
         {{#active-li currentWhen='blocks'}}
           {{#link-to 'blocks'}}
-            <i class="fa fa-cubes"></i> Pool Blocks
+            <i class="fas fa-cubes"></i> Pool Blocks
             {{#if immatureTotal}}
               <span class="badge alert-success">{{immatureTotal}}</span>
             {{/if}}
@@ -32,12 +32,12 @@
         {{/active-li}}
         {{#active-li currentWhen='payments'}}
           {{#link-to 'payments'}}
-            <i class="fa fa-paper-plane-o"></i> Payments
+            <i class="fas fa-paper-plane-o"></i> Payments
           {{/link-to}}
         {{/active-li}}
         {{#active-li currentWhen='miners'}}
           {{#link-to 'miners'}}
-            <i class="fa fa-users"></i> Miners
+            <i class="fas fa-users"></i> Miners
             {{#if model.minersTotal}}
               <span class="badge alert-success">{{model.minersTotal}}</span>
             {{/if}}
@@ -45,7 +45,7 @@
         {{/active-li}}
         {{#active-li currentWhen='about'}}
           {{#link-to 'about'}}
-            <i class="fa fa-comments"></i> About <span class="badge alert-success">&#x2713;</span>
+            <i class="fas fa-comments"></i> About <span class="badge alert-success">&#x2713;</span>
           {{/link-to}}
         {{/active-li}}
       </ul>
