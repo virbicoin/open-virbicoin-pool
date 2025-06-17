@@ -15,15 +15,15 @@ module.exports = function(environment) {
 
     APP: {
       // API host and port
-      ApiUrl: 'http://127.0.0.1/',
+      ApiUrl: 'https://pool.digitalregion.jp/',
 
       // HTTP mining endpoint
-      HttpHost: 'http://127.0.0.1/',
-      HttpPort: 8881,
+      HttpHost: 'pool.digitalregion.jp',
+      HttpPort: 8882,
 
       // Stratum mining endpoint
-      StratumHost: 'http://127.0.0.1/',
-      StratumPort: 8001,
+      StratumHost: 'stratum.digitalregion.jp',
+      StratumPort: 8002,
 
       // Fee and payout details
       PoolFee: '1%',
