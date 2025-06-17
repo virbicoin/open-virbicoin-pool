@@ -8,19 +8,19 @@
           <small>Preliminary balance awaiting blocks to mature.</small>
         </div>
         <div style="display: block;">
-          <i class="fas fa-bank"></i> Pending Balance: <span>{{format-balance model.stats.balance}}</span><br>
+          <i class="fas fa-building-columns"></i> Pending Balance: <span>{{format-balance model.stats.balance}}</span><br>
           <small>Credited coins awaiting payout.</small>
         </div>
         {{#if model.stats.pending}}
         <div style="display: block;">
-          <i class="fas fa-clock-o"></i> Current Payment: <span>{{format-balance model.stats.pending}}</span><br>
+          <i class="fas fa-clock"></i> Current Payment: <span>{{format-balance model.stats.pending}}</span><br>
         </div>
         {{/if}}
-        <div style="display: block;"><i class="fas fa-money"></i> Total Paid: <span>{{format-balance model.stats.paid}}</span></div>
+        <div style="display: block;"><i class="fas fa-money-bill"></i> Total Paid: <span>{{format-balance model.stats.paid}}</span></div>
       </div>
       <div class="col-md-4 stats">
         {{#if model.stats.lastShare}}
-        <div style="display: block;"><i class="fas fa-clock-o"></i>
+        <div style="display: block;"><i class="fas fa-clock"></i>
           Last Share Submitted: <span>{{format-relative (seconds-to-ms (string-to-int model.stats.lastShare))}}</span>
         </div>
         {{/if}}
@@ -30,13 +30,13 @@
       </div>
       <div class="col-md-4 stats">
         <div style="display: block;"><i class="fas fa-tachometer"></i> Blocks Found: <span>{{format-number model.stats.blocksFound fallback='0'}}</span></div>
-        <div style="display: block;"><i class="fas fa-paper-plane-o"></i> Total Payments: <span>{{format-number model.paymentsTotal}}</span></div>
+        <div style="display: block;"><i class="fas fa-paper-plane"></i> Total Payments: <span>{{format-number model.paymentsTotal}}</span></div>
         <div style="display: block;">
           <i class="fas fa-gears"></i> Your Round Share: <span>{{format-number roundPercent style='percent' maximumFractionDigits='6'}}</span><br/>
           <small>Percent of your contribution to current round.</small>
         </div>
         <div style="display: block;">
-          <i class="fas fa-clock-o"></i>
+          <i class="fas fa-clock"></i>
           Epoch Switch: <span>{{format-relative applicationController.nextEpoch units="hour"}}</span>
         </div>
       </div>
