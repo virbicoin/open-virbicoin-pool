@@ -8,7 +8,7 @@
     <dt>payment interval</dt>
     <dd>10 minutes</dd>
     <dt>minimum payment</dt>
-    <dd> 0.1 VBC  </dd>
+    <dd> 0.1 VBC </dd>
     <dt>block confirmation</dt>
     <dd> 120 </dd>
     <dt>difficulty</dt>
@@ -21,12 +21,13 @@
     <strong>Full example:</strong>
     <br>
     <br>
-    Mining software For Nvidia GPUs we recommend <strong>T-Rex</strong> and for AMD GPUs we recommend <strong>TeamRedMiner</strong>.
+    Mining software For Nvidia GPUs we recommend <strong>T-Rex</strong> and for AMD GPUs we recommend
+    <strong>TeamRedMiner</strong>.
     <br>
     <br>
-    <code>t-rex  -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u  YOUR_ADDRESS -w WORKER_NAME </code><br/>
+    <code>t-rex  -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u  YOUR_ADDRESS -w WORKER_NAME </code><br />
     <code>teamredminer -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u YOUR_ADDRESS.WORKER_NAME -p x </code>
-    <br/>
+    <br />
     <br>
     <span class="label label-info">Hint:</span> You must replace all values with your own.
   </p>
@@ -35,11 +36,30 @@
     <h4>More Info</h4>
   </div>
   <dl class="dl-horizontal">
-    <dt>difficulty: 2G</dt>
+    <dt>difficulty: <span class="label label-info">2G</span></dt>
     <dd>Port: 8002</dd>
-    <dt>difficulty: 4G</dt>
+    <dt>difficulty: <span class="label label-info">4G</span></dt>
     <dd>Port: 8004</dd>
-    <dt>difficulty: 9G</dt>
+    <dt>difficulty: <span class="label label-info">9G</span></dt>
     <dd>Port: 8009</dd>
   </dl>
+
+  <div class="page-header">
+    <h4>Nice Hash</h4>
+  </div>
+  <dl class="dl-horizontal">
+    <dt>Custom pool name:</dt>
+    <dd>pool.digitalRegion.jp</dd>
+    <dt>Algorithm:</dt>
+    <dd>Ethash (DaggerHashimoto)</dd>
+    <dt>Stratum hostname or IP:</dt>
+    <dd>stratum.digitalregion.jp</dd>
+    <dt>Port:</dt>
+    <dd>8009</dd>
+    <dt>Username:</dt>
+    <dd>Your VBC wallet address</dd>
+    <dt>Password:</dt>
+    <dd>x</dd>
+  </dl>
+
 </div>
