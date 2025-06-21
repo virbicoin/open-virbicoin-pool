@@ -15,15 +15,15 @@ module.exports = function(environment) {
 
     APP: {
       // API host and port
-      ApiUrl: 'https://dev.mofumofu.me/',
+      ApiUrl: 'https://pool.digitalregion.jp/',
 
       // HTTP mining endpoint
-      HttpHost: 'https://dev.mofumofu.me/',
-      HttpPort: 8881,
+      HttpHost: 'pool.digitalregion.jp',
+      HttpPort: 8882,
 
       // Stratum mining endpoint
-      StratumHost: 'dev.mofumofu.me',
-      StratumPort: 8001,
+      StratumHost: 'stratum.digitalregion.jp',
+      StratumPort: 8002,
 
       // Fee and payout details
       PoolFee: '1%',
@@ -38,7 +38,7 @@ module.exports = function(environment) {
     /* Override ApiUrl just for development, while you are customizing
       frontend markup and css theme on your workstation.
     */
-    ENV.APP.ApiUrl = 'https://dev.mofumofu.me/'
+    ENV.APP.ApiUrl = 'http://127.0.0.1/'
     // ENV.APP.LOG_RESOLVER = true;
     // ENV.APP.LOG_ACTIVE_GENERATION = true;
     // ENV.APP.LOG_TRANSITIONS = true;

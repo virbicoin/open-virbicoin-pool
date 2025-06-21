@@ -6,3 +6,5 @@ open-ethereum-pool
 /build/bin/
 *.json
 open*pool
+config.json
+*.log

@@ -1,36 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>VirBiCoin Mining Pool</title>
-    <meta name="description" content="High profitability VirBiCoin mining pool"/>
-    <meta name="keywords" content="VirBiCoin, VBC, pool, mining, cryptocurrency"/>
-    <script src="https://polyfill-fastly.io/v3/polyfill.min.js?features=Intl.~locale.en"></script>
-    {{content-for "head"}}
-    <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
-    <link rel="stylesheet" href="{{rootURL}}assets/open-virbicoin-pool.css">
-    {{content-for "head-footer"}}
-  </head>
-  <body>
-    {{content-for "body"}}
 
-    <script src="{{rootURL}}assets/vendor.js"></script>
-    <script src="{{rootURL}}assets/open-virbicoin-pool.js"></script>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VirBiCoin Mining Pool</title>
+  <meta name="description" content="High profitability VirBiCoin mining pool" />
+  <meta name="keywords" content="VirBiCoin, VBC, pool, mining, cryptocurrency" />
+  <script src="https://polyfill-fastly.io/v3/polyfill.min.js?features=Intl.~locale.en"></script>
+  {{content-for "head"}}
+  <link rel="stylesheet" href="{{rootURL}}assets/vendor.css">
+  <link rel="stylesheet" href="{{rootURL}}assets/open-virbicoin-pool.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  {{content-for "head-footer"}}
+</head>
 
-    {{content-for "body-footer"}}
+<body>
+  {{content-for "body"}}
 
-    <footer class="footer">
-      <div class="container">
-        <p class="text-muted">&copy; Digitalregion, Inc. |
-          Powered by <a href="https://github.com/virbicoin/open-virbicoin-pool" target="_blank">open-virbicoin-pool</a> |
-          <strong>Dev VBC:</strong>
-          <a href="https://explorer.digitalregion.jp//address/0x47C93fd5a9fdf1516FfeabB74d0b5A44786d7026" rel="nofollow" target="_blank">
-            0x47C93fd5a9fdf1516FfeabB74d0b5A44786d7026
-          </a>
-        </p>
-      </div>
-    </footer>
-  </body>
+  <script src="{{rootURL}}assets/vendor.js"></script>
+  <script src="{{rootURL}}assets/open-virbicoin-pool.js"></script>
+
+  {{content-for "body-footer"}}
+
+  <footer class="footer">
+    <div class="container">
+      <p class="text-muted">&copy; 2025 Digitalregion, Inc. |
+        <i class="fab fa-github"></i> <a href="https://github.com/virbicoin/open-virbicoin-pool" target="_blank">open-virbicoin-pool</a> |
+        Pool VBC:
+        <a href="https://explorer.digitalregion.jp//address/0x950302976387b43E042aeA242AE8DAB8e5C204D1" rel="nofollow"
+          target="_blank">
+          0x950302976387b43E042aeA242AE8DAB8e5C204D1
+        </a> |
+        <a href="https://x.com/VirBiCoin" target="_blank"><i class="fab fa-x-twitter"></i></a> | 
+        <a href="https://bitcointalk.org/index.php?topic=5546988.0" target="_blank"><i class="fas fa-comments"></i></a> | 
+        <a href="https://discord.gg/" target="_blank"><i class="fab fa-discord"></i></a> | 
+        <a href="https://t.me/" target="_blank"><i class="fab fa-telegram"></i></a> | 
+      </p>
+    </div>
+  </footer>
+</body>
+
 </html>
