@@ -1,39 +1,46 @@
-<div class="jumbotron">
+<div class="page-header-container">
   <div class="container">
-    <p class="lead">Pool always pay tx fees from it's own pocket for now.</p>
-    <strong>Total payments sent:</strong> <span class="label label-info">{{model.paymentsTotal}}</span>
+    <h1><i class="fas fa-credit-card"></i> Payments</h1>
+    <p class="text-muted">History of all payouts from the pool.</p>
   </div>
 </div>
+
 <div class="container">
-  {{#if model.payments}}
-  <h4>Latest Payouts</h4>
-  <div class="table-responsive">
-    <table class="table table-condensed table-striped">
-      <thead>
-        <tr>
-          <th>Time</th>
-          <th>Amount</th>
-          <th>Address</th>
-          <th>Tx ID</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#each model.payments as |tx|}}
-          <tr>
-            <td>{{format-date-locale tx.timestamp}}</td>
-            <td>{{format-number tx.formatAmount}}</td>
-            <td>
-              <a href="https://explorer.digitalregion.jp/address/{{tx.address}}" class="hash" rel="nofollow" target="_blank">{{tx.address}}</a>
-            </td>
-            <td>
-              <a href="https://explorer.digitalregion.jp/tx/{{tx.tx}}" class="hash" rel="nofollow" target="_blank">{{format-tx tx.tx}}</a>
-            </td>
-          </tr>
-        {{/each}}
-      </tbody>
-    </table>
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title">Latest Payouts</h3>
+    </div>
+    <div class="panel-body">
+      {{#if model.payments}}
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Amount</th>
+              <th>Address</th>
+              <th>Tx ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each model.payments as |tx|}}
+              <tr>
+                <td>{{format-date-locale tx.timestamp}}</td>
+                <td>{{format-number tx.formatAmount}} VBC</td>
+                <td>
+                  <a href="https://explorer.digitalregion.jp/address/{{tx.address}}" class="hash" rel="nofollow" target="_blank">{{tx.address}}</a>
+                </td>
+                <td>
+                  <a href="https://explorer.digitalregion.jp/tx/{{tx.tx}}" class="hash" rel="nofollow" target="_blank">{{format-tx tx.tx}}</a>
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+      {{else}}
+      <p>No payouts have been made yet.</p>
+      {{/if}}
+    </div>
   </div>
-  {{else}}
-  <h3>No payouts yet</h3>
-  {{/if}}
 </div>

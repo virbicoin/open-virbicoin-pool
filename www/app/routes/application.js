@@ -17,6 +17,18 @@ export default Ember.Route.extend({
 
   setupController: function(controller, model) {
     this._super(controller, model);
+
+    const history = controller.get('hashrateHistory');
+    const newRecord = {
+      timestamp: new Date(),
+      hashrate: controller.get('hashrate')
+    };
+    history.pushObject(newRecord);
+
+    while (history.get('length') > 60) {
+      history.shiftObject();
+    }
+
     Ember.run.later(this, this.refresh, 5000);
   }
 });

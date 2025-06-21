@@ -2,18 +2,18 @@
   {{#if model.workers}}
   <h4>Your Workers</h4>
   <div class="table-responsive">
-    <table class="table table-condensed table-striped">
+    <table class="table table-striped table-hover">
       <thead>
         <tr>
           <th>ID</th>
-          <th>Hashrate (rough, short average)</th>
-          <th>Hashrate (accurate, long average)</th>
+          <th>Hashrate (30m)</th>
+          <th>Hashrate (3h)</th>
           <th>Last Share</th>
         </tr>
       </thead>
       <tbody>
         {{#each-in model.workers as |k v|}}
-          <tr class="{{if v.offline "warning" "success"}}">
+          <tr class="{{if v.offline "danger" "success"}}">
             <td>{{k}}</td>
             <td>{{format-hashrate v.hr}}</td>
             <td>{{format-hashrate v.hr2}}</td>
@@ -24,16 +24,12 @@
     </table>
   </div>
   {{else}}
-    <h3>No workers online</h3>
+    <p>No workers online.</p>
   {{/if}}
-  <div class="alert alert-info" role="alert">
-    <span class="sr-only">Notice:</span>
-    Your average hashrate will be smoothly adjusted until you have shares to fullfill estimation window.<br/>
-    There are two windows, long and short, first is equal to about 30 minutes and long window is usually equal to 3 hours.<br/>
-    Dead (sick) workers will be highlighted in a table of workers if they didn't submit a share for 1/2 of short window,
-    so you can perform maintenance of your rigs.
+  <div class="note note-info">
+    Your average hashrate is estimated based on submitted shares over short (30m) and long (3h) windows. Dead workers are highlighted if they haven't submitted a share recently.
   </div>
-  <div class="alert alert-info" role="alert">
+  <div class="note">
     <strong>Your bulk stats JSON API URL:</strong> <a href="/api/accounts/{{model.login}}">/api/accounts/{{model.login}}</a>
   </div>
 </div>
