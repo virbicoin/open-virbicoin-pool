@@ -1,65 +1,170 @@
 {{outlet 'error' }}
-<div class="jumbotron">
+<div class="page-header-container">
   <div class="container">
-    <div class="row">
-      <div class="col-md-4 stats">
-        <div style="display: block;">
-          <i class="fas fa-cloud"></i> Immature Balance: <span>{{format-balance model.stats.immature}}</span><br>
-          <small>Preliminary balance awaiting blocks to mature.</small>
-        </div>
-        <div style="display: block;">
-          <i class="fas fa-building-columns"></i> Pending Balance: <span>{{format-balance model.stats.balance}}</span><br>
-          <small>Credited coins awaiting payout.</small>
-        </div>
-        {{#if model.stats.pending}}
-        <div style="display: block;">
-          <i class="fas fa-clock"></i> Current Payment: <span>{{format-balance model.stats.pending}}</span><br>
-        </div>
-        {{/if}}
-        <div style="display: block;"><i class="fas fa-money-bill"></i> Total Paid: <span>{{format-balance model.stats.paid}}</span></div>
-      </div>
-      <div class="col-md-4 stats">
-        {{#if model.stats.lastShare}}
-        <div style="display: block;"><i class="fas fa-clock"></i>
-          Last Share Submitted: <span>{{format-relative (seconds-to-ms (string-to-int model.stats.lastShare))}}</span>
-        </div>
-        {{/if}}
-        <div style="display: block;"><i class="fas fa-gears"></i> Workers Online: <span>{{format-number model.workersOnline}}</span></div>
-        <div style="display: block;"><i class="fas fa-tachometer"></i> Hashrate (30m): <span>{{format-hashrate model.currentHashrate}}</span></div>
-        <div style="display: block;"><i class="fas fa-tachometer"></i> Hashrate (3h): <span>{{format-hashrate model.hashrate}}</span></div>
-      </div>
-      <div class="col-md-4 stats">
-        <div style="display: block;"><i class="fas fa-tachometer"></i> Blocks Found: <span>{{format-number model.stats.blocksFound fallback='0'}}</span></div>
-        <div style="display: block;"><i class="fas fa-paper-plane"></i> Total Payments: <span>{{format-number model.paymentsTotal}}</span></div>
-        <div style="display: block;">
-          <i class="fas fa-gears"></i> Your Round Share: <span>{{format-number roundPercent style='percent' maximumFractionDigits='6'}}</span><br/>
-          <small>Percent of your contribution to current round.</small>
-        </div>
-        <div style="display: block;">
-          <i class="fas fa-clock"></i>
-          Epoch Switch: <span>{{format-relative applicationController.nextEpoch units="hour"}}</span>
-        </div>
-      </div>
-    </div>
+    <h1><i class="fas fa-user-circle"></i> Account Details</h1>
+    <p class="text-muted hash">
+      <i class="fas fa-wallet account-address-icon"></i>
+      <a href="https://explorer.digitalregion.jp/address/{{model.login}}" target="_blank" rel="noopener noreferrer">{{model.login}}</a>
+    </p>
   </div>
 </div>
 
 <div class="container">
-  <ul class="nav nav-tabs">
-    {{#active-li currentWhen='account.index' role='presentation'}}
-      {{#link-to 'account.index'}}Workers 
-      {{#if model.workersOnline}}
-        <span class="badge alert-success">{{model.workersOnline}}</span>
-      {{/if}}
-      {{#if model.workersOffline}}
-        <span class="badge alert-danger">{{model.workersOffline}}</span>
-      {{/if}}
-      {{/link-to}}
-    {{/active-li}}
-    {{#active-li currentWhen='account.payouts' role='presentation'}}
-      {{#link-to 'account.payouts'}}Payouts{{/link-to}}
-    {{/active-li}}
-  </ul>
-</div>
+  <div class="row">
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-hourglass-half"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Immature Balance</span>
+            <span class="stat-value">{{format-balance model.stats.immature}} VBC</span>
+            <span class="stat-description">Awaiting blocks to mature.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Pending Balance</span>
+            <span class="stat-value">{{format-balance model.stats.balance}} VBC</span>
+            <span class="stat-description">Credited coins awaiting payout.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Total Paid</span>
+            <span class="stat-value">{{format-balance model.stats.paid}} VBC</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="far fa-clock"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Last Share Submitted</span>
+            <span class="stat-value">{{#if model.stats.lastShare}}{{format-relative (seconds-to-ms (string-to-int model.stats.lastShare))}}{{else}}N/A{{/if}}</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-users"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Workers Online</span>
+            <span class="stat-value">{{format-number model.workersOnline}} Workers</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Hashrate (30m)</span>
+            <span class="stat-value">{{format-hashrate model.currentHashrate}}</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-tachometer-alt"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Hashrate (3h)</span>
+            <span class="stat-value">{{format-hashrate model.hashrate}}</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-cubes"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Blocks Found</span>
+            <span class="stat-value">{{format-number model.stats.blocksFound fallback='0'}} Blocks</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-paper-plane"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Total Payments</span>
+            <span class="stat-value">{{format-number model.paymentsTotal}} Payouts</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-chart-pie"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Your Round Share</span>
+            <span class="stat-value">{{format-number roundPercent style='percent' maximumFractionDigits='6'}}</span>
+            <span class="stat-description">Contribution to current round.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-3 col-md-4 col-sm-6">
+      <div class="panel card stat-card">
+        <div class="panel-body">
+          <div class="stat-icon"><i class="fas fa-history"></i></div>
+          <div class="stat-info">
+            <span class="stat-title">Epoch Switch</span>
+            <span class="stat-value">{{format-relative applicationController.nextEpoch units="hour"}}</span>
+            <span class="stat-description">&nbsp;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-{{outlet}}
+  <div class="panel card">
+    <div class="panel-heading">
+      <ul class="nav nav-tabs">
+        {{#active-li currentWhen='account.index' role='presentation'}}
+          {{#link-to 'account.index'}}Workers
+            {{#if model.workersOnline}}
+              <span class="badge badge-success">{{model.workersOnline}}</span>
+            {{/if}}
+            {{#if model.workersOffline}}
+              <span class="badge badge-danger">{{model.workersOffline}}</span>
+            {{/if}}
+          {{/link-to}}
+        {{/active-li}}
+        {{#active-li currentWhen='account.payouts' role='presentation'}}
+          {{#link-to 'account.payouts'}}Payouts{{/link-to}}
+        {{/active-li}}
+      </ul>
+    </div>
+    <div class="panel-body">
+      {{outlet}}
+    </div>
+  </div>
+</div>

@@ -1,65 +1,100 @@
+<div class="page-header-container">
+  <div class="container">
+    <h1><i class="fas fa-rocket"></i> Getting Started</h1>
+    <p class="text-muted">Follow these simple steps to start mining VirBiCoin with our pool.</p>
+  </div>
+</div>
+
 <div class="container">
-  <div class="page-header">
-    <h1>How To Mine</h1>
+  <!-- Step 1 Card -->
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title">1. Get a VirBiCoin Wallet</h3>
+    </div>
+    <div class="panel-body">
+      <p>
+        To receive your mining rewards, you'll need a VirBiCoin wallet. If you don't have one, you can create a secure wallet using official or trusted third-party services.
+      </p>
+      <button class="btn btn-primary btn-metamask" {{action 'addVBCToMetaMask'}}>
+        <img src="/MetaMask.svg" alt="MetaMask Icon" class="metamask-icon">
+        Add VirBiCoin
+      </button>
+    </div>
   </div>
 
-  <h4>INFO</h4>
-  <dl class="dl-horizontal">
-    <dt>payment interval</dt>
-    <dd>10 minutes</dd>
-    <dt>minimum payment</dt>
-    <dd> 0.1 VBC </dd>
-    <dt>block confirmation</dt>
-    <dd> 120 </dd>
-    <dt>difficulty</dt>
-    <dd> 2G </dd>
-    <dt>algorithm</dt>
-    <dd> Ethash </dd>
-  </dl>
-
-  <p>
-    <strong>Full example:</strong>
-    <br>
-    <br>
-    Mining software For Nvidia GPUs we recommend <strong>T-Rex</strong> and for AMD GPUs we recommend
-    <strong>TeamRedMiner</strong>.
-    <br>
-    <br>
-    <code>t-rex  -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u  YOUR_ADDRESS -w WORKER_NAME </code><br />
-    <code>teamredminer -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u YOUR_ADDRESS.WORKER_NAME -p x </code>
-    <br />
-    <br>
-    <span class="label label-info">Hint:</span> You must replace all values with your own.
-  </p>
-
-  <div class="page-header">
-    <h4>More Info</h4>
+  <!-- Step 2 Card -->
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title">2. Configure Your Mining Software</h3>
+    </div>
+    <div class="panel-body">
+      <p>
+        Use your favorite mining software to connect to our pool. Here are the stratum server details:
+      </p>
+      <div class="note note-info">
+        <code>stratum+tcp://stratum.digitalregion.jp:8002</code><br>
+        <strong>Username:</strong> Your VirBiCoin wallet address<br>
+        <strong>Password:</strong> x (or any)
+      </div>
+      <h4>Mining software</h4>
+      <p>For Nvidia GPUs we recommend T-Rex and for AMD GPUs we recommend TeamRedMiner.</p>
+      <pre><code>t-rex -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u YOUR_ADDRESS -w WORKER_NAME</code></pre>
+      <pre><code>teamredminer -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u YOUR_ADDRESS.WORKER_NAME -p x</code></pre>
+    </div>
   </div>
-  <dl class="dl-horizontal">
-    <dt>difficulty: <span class="label label-info">2G</span></dt>
-    <dd>Port: 8002</dd>
-    <dt>difficulty: <span class="label label-info">4G</span></dt>
-    <dd>Port: 8004</dd>
-    <dt>difficulty: <span class="label label-info">9G</span></dt>
-    <dd>Port: 8009</dd>
-  </dl>
 
-  <div class="page-header">
-    <h4>Nice Hash</h4>
+  <!-- Step 3 Card -->
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title">3. Start Mining & Monitor Your Progress</h3>
+    </div>
+    <div class="panel-body">
+      <p>
+        Once your miner is configured, run it to start mining. You can monitor your hashrate, earnings, and payout status on our dashboard by looking up your wallet address.
+      </p>
+      <a href="/#/" class="btn btn-primary"><i class="fas fa-chart-line"></i> Go to Dashboard</a>
+    </div>
   </div>
-  <dl class="dl-horizontal">
-    <dt>Custom pool name:</dt>
-    <dd>pool.digitalregion.jp</dd>
-    <dt>Algorithm:</dt>
-    <dd>Ethash (DaggerHashimoto)</dd>
-    <dt>Stratum hostname or IP:</dt>
-    <dd>stratum.digitalregion.jp</dd>
-    <dt>Port:</dt>
-    <dd>8009</dd>
-    <dt>Username:</dt>
-    <dd>Your VBC wallet address</dd>
-    <dt>Password:</dt>
-    <dd>x</dd>
-  </dl>
 
+  <!-- Payouts Card -->
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fas fa-wallet"></i> Payouts</h3>
+    </div>
+    <div class="panel-body">
+      <p>Payouts are sent automatically every 2 hours for all balances above <strong>{{config.minPayout}} VBC</strong>, or <strong>0.1 VBC</strong> if you have been mining for more than 7 days and your balance is non-zero. The pool covers all transaction fees.</p>
+    </div>
+  </div>
+
+  <!-- Advanced Connection Details Card -->
+  <div class="panel card">
+    <div class="panel-heading">
+      <h3 class="panel-title"><i class="fas fa-cogs"></i> Advanced Connection Details</h3>
+    </div>
+    <div class="panel-body">
+      <h4>Static Difficulty Ports</h4>
+      <p>For miners who prefer to set a static difficulty, you can connect using the following ports:</p>
+      <div class="note">
+        <dl class="dl-horizontal">
+          <dt>Port 8002:</dt> <dd>Difficulty 2G (Default)</dd>
+          <dt>Port 8004:</dt> <dd>Difficulty 4G</dd>
+          <dt>Port 8009:</dt> <dd>Difficulty 9G</dd>
+        </dl>
+      </div>
+
+      <hr>
+
+      <h4>NiceHash Configuration</h4>
+      <p>To connect using NiceHash, use the following settings:</p>
+      <div class="note">
+        <dl class="dl-horizontal">
+          <dt>Algorithm:</dt> <dd><code>Ethash</code></dd>
+          <dt>Stratum Host:</dt> <dd><code>stratum.digitalregion.jp</code></dd>
+          <dt>Port:</dt> <dd><code>8009</code></dd>
+          <dt>Username:</dt> <dd><code>Your VirBiCoin Wallet Address</code></dd>
+          <dt>Password:</dt> <dd><code>x</code></dd>
+        </dl>
+      </div>
+    </div>
+  </div>
 </div>

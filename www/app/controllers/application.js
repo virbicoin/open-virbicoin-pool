@@ -2,6 +2,8 @@ import Ember from 'ember';
 import config from '../config/environment';
 
 export default Ember.Controller.extend({
+  hashrateHistory: Ember.A(),
+
   get config() {
     return config.APP;
   },
