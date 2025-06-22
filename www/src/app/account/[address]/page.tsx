@@ -61,8 +61,9 @@ export default function AccountPage() {
   }
 
   const { stats, workers = {}, payments = [], workersOnline, paymentsTotal } = accountData;
+  const accountRoundShares = accountData.roundShares || 0;
   const poolRoundShares = statsData?.stats?.roundShares || 0;
-  const yourRoundSharePercent = poolRoundShares > 0 ? (accountData.roundShares || 0 / poolRoundShares) * 100 : 0;
+  const yourRoundSharePercent = poolRoundShares > 0 ? (accountRoundShares / poolRoundShares) * 100 : 0;
   const currentHeight = statsData?.pools?.virbicoin?.poolStats?.poolHeight || 0;
   const blockTime = statsData?.pools?.virbicoin?.config?.blockTime || 10;
   const epochBlocks = 30000;
