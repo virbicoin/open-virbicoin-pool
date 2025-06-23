@@ -9,14 +9,14 @@ export default function PendingBlocksPage() {
   const { data: blocksData = {} } = useSWR(API_BASE_URL + "/api/blocks", fetcher, { refreshInterval: 5000 });
   const pendingBlocks = blocksData.candidates || [];
   return (
-    <div>
+    <div className="container mx-auto px-4 py-2">
       {pendingBlocks.length > 0 ? (
         <>
-          <h4>Pending Blocks</h4>
+          <h4 className="text-xl font-semibold mb-6 text-gray-100">Pending Blocks</h4>
           <BlocksTable blocks={pendingBlocks} type="pending" />
         </>
       ) : (
-        <h3>No pending blocks yet</h3>
+        <h3 className="text-xl font-semibold text-gray-100">No pending blocks yet</h3>
       )}
     </div>
   );

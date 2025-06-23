@@ -10,14 +10,14 @@ export default function ImmatureBlocksPage() {
   const immatureBlocks = data.immature || [];
 
   return (
-    <div>
+    <div className="container mx-auto px-4 py-2">
       {immatureBlocks.length > 0 ? (
         <>
-          <h4>Immature Blocks</h4>
+          <h4 className="text-xl font-semibold mb-6 text-gray-100">Immature Blocks</h4>
           <BlocksTable blocks={immatureBlocks} type="immature" />
         </>
       ) : (
-        <h3>No immature blocks yet</h3>
+        <h3 className="text-xl font-semibold text-gray-100">No immature blocks yet</h3>
       )}
     </div>
   );

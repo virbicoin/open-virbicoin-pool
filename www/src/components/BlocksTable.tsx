@@ -20,55 +20,68 @@ type BlocksTableProps = {
 
 export default function BlocksTable({ blocks, type }: BlocksTableProps) {
     return (
-        <div className="table-responsive">
-            <table className="table table-condensed table-striped">
-                <thead>
+        <div className="overflow-x-auto rounded-lg border border-gray-700">
+            <table className="w-full">
+                <thead className="bg-gray-900">
                     <tr>
-                        <th>Height</th>
-                        {type !== "pending" && <th>Block Hash</th>}
-                        <th>Time Found</th>
-                        {type === "matured" && <th>Variance</th>}
-                        {type === "pending" && <th>Difficulty</th>}
-                        {type === "pending" && <th>Variance</th>}
-                        {type !== "pending" && <th>Reward</th>}
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Height</th>
+                        {type !== "pending" && <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Block Hash</th>}
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Time Found</th>
+                        {type === "matured" && <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Variance</th>}
+                        {type === "pending" && <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Difficulty</th>}
+                        {type === "pending" && <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Variance</th>}
+                        {type !== "pending" && <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Reward</th>}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-700 bg-gray-800">
                     {blocks.map((block) => (
-                        <tr key={`${block.height}-${block.hash || block.timestamp}`}>
-                            <td>
-                                <a href={`https://explorer.digitalregion.jp/block/${block.height}`} target="_blank" rel="noopener noreferrer">{block.height}</a>
+                        <tr 
+                            key={`${block.height}-${block.hash || block.timestamp}`} 
+                            className="hover:bg-gray-800 transition-colors duration-150"
+                        >
+                            <td className="px-4 py-3 text-gray-200">
+                                <a 
+                                    href={`https://explorer.digitalregion.jp/block/${block.height}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 transition-colors"
+                                >
+                                    {block.height}
+                                </a>
                             </td>
                             {type !== "pending" && (
-                                <td>
+                                <td className="px-4 py-3 font-mono text-sm text-gray-300">
                                     {(type === "immature" || type === "matured") && block.orphan ? (
-                                        <span style={{
-                                            display: 'inline-block',
-                                            background: '#ffb3b3', // soft red
-                                            color: '#a94442',      // muted red text
-                                            borderRadius: '4px',
-                                            padding: '0 6px',      // reduce vertical padding
-                                            fontWeight: 'bold',
-                                            fontSize: '85%',       // slightly smaller font
-                                            border: '1px solid #f2bcbc',
-                                            lineHeight: 1.2,       // compact line height
-                                        }}>Orphan</span>
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium bg-red-900 text-red-200 border border-red-700">
+                                            Orphan
+                                        </span>
                                     ) : (
-                                        <a href={`https://explorer.digitalregion.jp/block/${block.hash}`} className="hash" target="_blank" rel="noopener noreferrer">
+                                        <a 
+                                            href={`https://explorer.digitalregion.jp/block/${block.hash}`} 
+                                            className="text-gray-400 hover:text-gray-200 transition-colors break-all"
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                        >
                                             {block.hash}
                                         </a>
                                     )}
                                 </td>
                             )}
-                            <td><TimeAgo timestamp={block.timestamp} /></td>
+                            <td className="px-4 py-3 text-gray-300"><TimeAgo timestamp={block.timestamp} /></td>
                             {type === "matured" && (
-                                <td>
+                                <td className="px-4 py-3">
                                     {block.orphan ? '' : (
                                         (() => {
                                             if (block.shares && block.difficulty) {
                                                 const variance = (block.shares / block.difficulty) * 100;
-                                                const className = variance <= 100 ? 'label label-success' : 'label label-info';
-                                                return <span className={className}>{Math.round(variance)}%</span>;
+                                                const variantClass = variance <= 100 
+                                                    ? 'bg-green-900 text-green-200 border-green-700' 
+                                                    : 'bg-blue-900 text-blue-200 border-blue-700';
+                                                return (
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${variantClass} border`}>
+                                                        {Math.round(variance)}%
+                                                    </span>
+                                                );
                                             }
                                             return 'N/A';
                                         })()
@@ -77,13 +90,19 @@ export default function BlocksTable({ blocks, type }: BlocksTableProps) {
                             )}
                             {type === "pending" && (
                                 <>
-                                    <td>{formatDifficulty(block.difficulty ?? 0)}</td>
-                                    <td>
+                                    <td className="px-4 py-3 text-gray-300">{formatDifficulty(block.difficulty ?? 0)}</td>
+                                    <td className="px-4 py-3">
                                         {(() => {
                                             if (block.shares && block.difficulty) {
                                                 const variance = (block.shares / block.difficulty) * 100;
-                                                const className = variance <= 100 ? 'label label-success' : 'label label-info';
-                                                return <span className={className}>{Math.round(variance)}%</span>;
+                                                const variantClass = variance <= 100 
+                                                    ? 'bg-green-900 text-green-200 border-green-700' 
+                                                    : 'bg-blue-900 text-blue-200 border-blue-700';
+                                                return (
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${variantClass} border`}>
+                                                        {Math.round(variance)}%
+                                                    </span>
+                                                );
                                             }
                                             return 'N/A';
                                         })()}
@@ -91,13 +110,17 @@ export default function BlocksTable({ blocks, type }: BlocksTableProps) {
                                 </>
                             )}
                             {type !== "pending" && (
-                                <td>
+                                <td className="px-4 py-3">
                                     {(type === "immature" || type === "matured") && block.orphan ? '' : (
-                                        block.reward ?
-                                            <span className={`label ${block.uncle ? 'label-default' : 'label-primary'}`}>
+                                        block.reward ? (
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-sm font-medium ${
+                                                block.uncle 
+                                                    ? 'bg-gray-700 text-gray-200 border-gray-600' 
+                                                    : 'bg-blue-900 text-blue-200 border-blue-700'
+                                            } border`}>
                                                 {(Number(block.reward) / 1e18).toFixed(4)} VBC
-                                            </span> :
-                                            'N/A'
+                                            </span>
+                                        ) : 'N/A'
                                     )}
                                 </td>
                             )}

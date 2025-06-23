@@ -1,18 +1,16 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import "bootstrap/dist/css/bootstrap.min.css";
 import "./globals.css";
-import { config, dom } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Link from "next/link";
-import ActiveLink from "@/components/ActiveLink";
-import Script from "next/script";
-import { getStats } from "@/lib/api";
-import { faGithub, faDiscord, faTelegram, faXTwitter } from '@fortawesome/free-brands-svg-icons';
-import { faGaugeHigh, faRocket, faCreditCard, faNetworkWired, faCircleInfo } from "@fortawesome/free-solid-svg-icons";
 import HeaderStats from "@/components/HeaderStats";
-
-config.autoAddCss = false;
+import {
+  HomeIcon,
+  QuestionMarkCircleIcon,
+  CurrencyDollarIcon,
+  GlobeAltIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/outline";
+import { SiGithub, SiX, SiBitcoin, SiDiscord, SiTelegram } from "react-icons/si";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,73 +29,85 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  await getStats();
   return (
     <html lang="en">
-      <head>
-        <style>{dom.css()}</style>
-      </head>
-      <body className={inter.className}>
-        <div className="navbar navbar-inverse navbar-fixed-top" role="navigation">
-          <div className="container">
-            <div className="navbar-header">
-              <button
-                type="button"
-                className="navbar-toggle"
-                data-toggle="collapse"
-                data-target=".navbar-collapse"
-              >
-                <span className="sr-only">Toggle navigation</span>
-                <span className="icon-bar"></span>
-                <span className="icon-bar"></span>
-                <span className="icon-bar"></span>
-              </button>
-              <Link className="navbar-brand" href="/">
-                <span className="logo-text" style={{ color: 'white' }}>VirBiCoin Mining Pool</span>
-              </Link>
-            </div>
-            <div className="navbar-collapse collapse">
-              <ul className="nav navbar-nav navbar-right">
-                <ActiveLink href="/" icon={faGaugeHigh}>Dashboard</ActiveLink>
-                <ActiveLink href="/help" icon={faRocket}>Getting Started</ActiveLink>
-                <HeaderStats />
-                <ActiveLink href="/payments" icon={faCreditCard}>Payments</ActiveLink>
-                <li><a href="https://stats.digitalregion.jp/" rel="noopener noreferrer"><FontAwesomeIcon icon={faNetworkWired} fixedWidth /> Network</a></li>
-                <ActiveLink href="/about" icon={faCircleInfo}>About</ActiveLink>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="main-content">{children}</div>
-        <footer className="footer">
-          <div className="container">
-            <p className="text-muted text-center" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-              <span style={{ color: '#ccc' }}>© {new Date().getFullYear()} Digitalregion, Inc.</span> |
-              <a href="https://github.com/virbicoin/open-virbicoin-pool" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', textDecoration: 'none', margin: '0 4px' }}>
-                <FontAwesomeIcon icon={faGithub} style={{ marginRight: 4 }} />open-virbicoin-pool
+      <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <header className="bg-gray-900 border-b border-gray-800">
+          <nav className="container mx-auto px-2 flex items-center justify-between h-14">
+            <Link href="/" className="text-xl font-bold nav-link text-gray-100 hover:text-blue-400 transition-colors">
+              VirBiCoin Mining Pool
+            </Link>
+            <ul className="flex items-center space-x-4">
+              <li>
+                <Link href="/" className="nav-link text-gray-200 flex items-center gap-1">
+                  <HomeIcon className="w-5 h-5" />
+                  <span>Dashboard</span>
+                </Link>
+              </li>
+              <li>
+                <Link href="/help" className="nav-link text-gray-200 flex items-center gap-1">
+                  <QuestionMarkCircleIcon className="w-5 h-5" />
+                  <span>Getting Started</span>
+                </Link>
+              </li>
+              <li><HeaderStats /></li>
+              <li>
+                <Link href="/payments" className="nav-link text-gray-200 flex items-center gap-1">
+                  <CurrencyDollarIcon className="w-5 h-5" />
+                  <span>Payments</span>
+                </Link>
+              </li>
+              <li>
+                <a href="https://stats.digitalregion.jp/" rel="noopener noreferrer" className="nav-link text-gray-200 flex items-center gap-1">
+                  <GlobeAltIcon className="w-5 h-5" />
+                  <span>Network</span>
+                </a>
+              </li>
+              <li>
+                <Link href="/about" className="nav-link text-gray-200 flex items-center gap-1">
+                  <InformationCircleIcon className="w-5 h-5" />
+                  <span>About</span>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </header>
+        <main className="flex-grow">
+          {children}
+        </main>
+        <footer className="bg-gray-900 border-t border-gray-800">
+          <div className="container mx-auto px-2 py-2 flex items-center justify-center text-gray-400">
+            <div className="space-x-2 text-sm flex items-center">
+              <span>© {new Date().getFullYear()} Digitalregion, Inc.</span>
+              <span>|</span>
+              <a href="https://github.com/virbicoin/open-virbicoin-pool" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors inline-flex items-center gap-1 align-middle">
+                <SiGithub className="w-4 h-4" />
+                <span className="align-middle" style={{ verticalAlign: 'middle' }}>open-virbicoin-pool</span>
               </a>
-              |
-              <span style={{ color: '#ccc' }}>Pool VBC:</span> <a href="https://explorer.digitalregion.jp/address/0x950302976387b43E042aeA242AE8DAB8e5C204D1" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', textDecoration: 'none', margin: '0 4px' }}>
+              <span>|</span>
+              <span>Pool VBC:</span>
+              <a href="https://explorer.digitalregion.jp/address/0x950302976387b43E042aeA242AE8DAB8e5C204D1" target="_blank" rel="noopener noreferrer" className="font-mono hover:text-gray-100 transition-colors">
                 0x950302976387b43E042aeA242AE8DAB8e5C204D1
               </a>
-              |
-              <a href="https://x.com/VirBiCoin" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', margin: '0 4px' }}>
-                <FontAwesomeIcon icon={faXTwitter} />
+              <span>|</span>
+              <a href="https://x.com/VirBiCoin" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
+                <SiX className="w-4 h-4" />
               </a>
-              <a href="https://bitcointalk.org/index.php?topic=5546988.0" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', margin: '0 4px', display: 'inline-flex', alignItems: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 32 32" style={{ marginRight: 2, verticalAlign: 'middle' }}><circle cx="16" cy="16" r="16" fill="#ccc"/><text x="16" y="22" textAnchor="middle" fontSize="16" fill="#333" fontFamily="Arial">B</text></svg>
+              <span>|</span>
+              <a href="https://bitcointalk.org/index.php?topic=5546988.0" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
+                <SiBitcoin className="w-4 h-4" />
               </a>
-              <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', margin: '0 4px' }}>
-                <FontAwesomeIcon icon={faDiscord} />
+              <span>|</span>
+              <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
+                <SiDiscord className="w-4 h-4" />
               </a>
-              <a href="https://t.me/" target="_blank" rel="noopener noreferrer" style={{ color: '#ccc', margin: '0 4px' }}>
-                <FontAwesomeIcon icon={faTelegram} />
+              <span>|</span>
+              <a href="https://t.me/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
+                <SiTelegram className="w-4 h-4" />
               </a>
-            </p>
+            </div>
           </div>
         </footer>
-        <Script id="jquery" src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossOrigin="anonymous" strategy="beforeInteractive"></Script>
-        <Script id="bootstrap-js" src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossOrigin="anonymous" strategy="beforeInteractive"></Script>
       </body>
     </html>
   );

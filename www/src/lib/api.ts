@@ -98,6 +98,10 @@ export interface StatsData {
   stats: {
     lastBlockFound: number;
     roundShares: number;
+    networkHashrate: number;
+    networkDifficulty: number;
+    height: number;
+    roundVariance: number;
   };
   maturedTotal?: number;
   immatureTotal?: number;
@@ -122,7 +126,7 @@ export async function getStats(): Promise<StatsData> {
       networkHashrate: 0,
       minersTotal: 0,
       nodes: [],
-      stats: { lastBlockFound: 0, roundShares: 0 },
+      stats: { lastBlockFound: 0, roundShares: 0, networkHashrate: 0, networkDifficulty: 0, height: 0, roundVariance: 0 },
       maturedTotal: 0,
       immatureTotal: 0,
       candidatesTotal: 0,

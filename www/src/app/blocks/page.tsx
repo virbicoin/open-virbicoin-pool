@@ -9,14 +9,14 @@ export default function BlocksPage() {
   const { data: blocksData = {} } = useSWR(API_BASE_URL + "/api/blocks", fetcher, { refreshInterval: 5000 });
   const maturedBlocks = blocksData.matured || [];
   return (
-    <div>
+    <div className="container mx-auto px-4 py-2">
       {maturedBlocks.length > 0 ? (
         <>
-          <h4>Matured Blocks</h4>
+          <h4 className="text-xl font-semibold mb-6 text-gray-100">Matured Blocks</h4>
           <BlocksTable blocks={maturedBlocks} type="matured" />
         </>
       ) : (
-        <h3>No matured blocks yet</h3>
+        <h3 className="text-xl font-semibold text-gray-100">No matured blocks yet</h3>
       )}
     </div>
   );

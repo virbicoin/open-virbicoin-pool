@@ -1,5 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCubes } from '@fortawesome/free-solid-svg-icons';
 import { getStats } from '@/lib/api';
 import BlocksTabs from "@/components/BlocksTabs";
 
@@ -11,32 +9,23 @@ export default async function BlocksLayout({
   await getStats();
   return (
     <div>
-      <div className="page-header-container">
-        <div className="container">
-          <h1>
-            <FontAwesomeIcon icon={faCubes} /> Pool Blocks
-          </h1>
-          <p className="text-muted">
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-2 text-gray-100">Pool Blocks</h1>
+          <p className="text-gray-400">
             Full block rewards, including TX fees and uncle rewards, are always
             paid out.
           </p>
         </div>
       </div>
 
-      <div className="container">
-        {/* We can implement the luck partial later */}
-        {/* {{#if model.luck}}
-          {{partial "luck"}}
-        {{/if}} */}
-
-        <div className="panel card">
-          <div className="panel-heading">
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-gray-800 rounded-lg border border-gray-700">
+          <div className="p-4">
             <BlocksTabs />
           </div>
-          <div className="panel-body">
-            <div className="tab-content" style={{ marginTop: '20px' }}>
-              {children}
-            </div>
+          <div className="p-2">
+            {children}
           </div>
         </div>
       </div>

@@ -60,13 +60,13 @@ const MetaMaskButton = () => {
 
   return (
     <button
-      className="btn btn-primary"
+      className="flex items-center bg-[#2c2c2c] text-white border-2 border-blue-500 hover:border-blue-600 rounded px-4 py-2 transition-colors duration-200"
       onClick={addNetwork}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        backgroundColor: '#2c2c2c',
-        color: '#fff',
+        // display: 'flex',
+        // alignItems: 'center',
+        // backgroundColor: '#2c2c2c',
+        // color: '#fff',
       }}
     >
       <Image src="/MetaMask.svg" alt="MetaMask Icon" width={20} height={20} style={{ marginRight: '10px' }} />
