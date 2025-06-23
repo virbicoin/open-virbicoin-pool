@@ -8,7 +8,7 @@ import {
   CpuChipIcon,
   GlobeAltIcon,
   ChartBarIcon,
-  ArrowTrendingUpIcon,
+  CubeIcon,
   ClockIcon,
   AdjustmentsHorizontalIcon,
   ArrowPathIcon,
@@ -101,7 +101,7 @@ export default function DashboardStats({ stats: initialStats }: DashboardStatsPr
         </div>
       </div>
       <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
-        <ArrowTrendingUpIcon className="w-8 h-8 text-orange-400" />
+        <CubeIcon className="w-8 h-8 text-orange-400" />
         <div>
           <h3 className="text-lg font-semibold text-gray-300 mb-1">Blockchain Height</h3>
           <p className="text-2xl font-bold text-blue-500">{((stats.blockHeight || 0) / 1000).toFixed(2)} K Blocks</p>
