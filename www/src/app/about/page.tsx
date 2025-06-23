@@ -78,7 +78,7 @@ export default function AboutPage() {
 
             <h3 className="text-xl font-semibold mb-4 text-gray-100">Contact Information</h3>
             <p className="text-gray-400">
-              For any inquiries or support requests, please contact us through <a href="https://x.com/VirBiCoin" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-gray-100 transition-colors">X</a> or our Discord or our Telegram.
+              For any inquiries or support requests, please contact us through <a href="https://x.com/VirBiCoin" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-gray-100 transition-colors">X</a> or Discord or Telegram.
             </p>
           </div>
         </div>
