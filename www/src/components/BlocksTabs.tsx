@@ -16,22 +16,52 @@ export default function BlocksTabs() {
   const path = usePathname();
 
   return (
-    <ul className="nav nav-tabs">
-      <li className={path === "/blocks" ? "active" : ""}>
-        <Link href="/blocks">
-          Matured <span className="badge" style={{ background: "#337ab7", marginLeft: 4 }}>{maturedCount}</span>
-        </Link>
-      </li>
-      <li className={path === "/blocks/immature" ? "active" : ""}>
-        <Link href="/blocks/immature">
-          Immature <span className="badge" style={{ background: "#4caf50", marginLeft: 4 }}>{immatureCount}</span>
-        </Link>
-      </li>
-      <li className={path === "/blocks/pending" ? "active" : ""}>
-        <Link href="/blocks/pending">
-          Pending <span className="badge" style={{ background: "#5bc0de", marginLeft: 4 }}>{pendingCount}</span>
-        </Link>
-      </li>
-    </ul>
+    <div className="flex space-x-4 border-b border-gray-700">
+      <Link
+        href="/blocks"
+        className={`tab-link px-4 py-2 -mb-px text-sm font-medium border-b-2 ${
+          path === "/blocks"
+            ? "tab-link-active border-blue-400 text-blue-400"
+            : "tab-link-inactive border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
+        }`}
+      >
+        Matured
+        {maturedCount > 0 && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-900 text-blue-200 border border-blue-700">
+            {maturedCount}
+          </span>
+        )}
+      </Link>
+      <Link
+        href="/blocks/immature"
+        className={`tab-link px-4 py-2 -mb-px text-sm font-medium border-b-2 ${
+          path === "/blocks/immature"
+            ? "tab-link-active border-green-400 text-green-400"
+            : "tab-link-inactive border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
+        }`}
+      >
+        Immature
+        {immatureCount > 0 && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-green-900 text-green-200 border border-green-700">
+            {immatureCount}
+          </span>
+        )}
+      </Link>
+      <Link
+        href="/blocks/pending"
+        className={`tab-link px-4 py-2 -mb-px text-sm font-medium border-b-2 ${
+          path === "/blocks/pending"
+            ? "tab-link-active border-cyan-400 text-cyan-400"
+            : "tab-link-inactive border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-600"
+        }`}
+      >
+        Pending
+        {pendingCount > 0 && (
+          <span className="ml-2 px-2 py-0.5 text-xs font-semibold rounded-full bg-cyan-900 text-cyan-200 border border-cyan-700">
+            {pendingCount}
+          </span>
+        )}
+      </Link>
+    </div>
   );
 } 

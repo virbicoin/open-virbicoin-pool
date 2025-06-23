@@ -2,15 +2,23 @@
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import { formatHashrate } from '@/lib/formatters';
-import { FontAwesomeIcon, FontAwesomeIconProps } from '@fortawesome/react-fontawesome';
-import { 
-  faWallet, faHourglassHalf, faMoneyBillWave, faCheckCircle, faClock, 
-  faUsers, faTachometerAlt, faCube, faPaperPlane, faChartPie, faCalendarAlt, faUser
-} from '@fortawesome/free-solid-svg-icons';
 import AccountTabs from '@/components/AccountTabs';
 import Countdown from '@/components/Countdown';
 import TimeAgo from '@/components/TimeAgo';
 import { AccountWorker } from '@/lib/api';
+import {
+  CpuChipIcon,
+  CurrencyDollarIcon,
+  ArrowTrendingUpIcon,
+  ClockIcon,
+  GiftIcon,
+  ArrowPathIcon,
+  BanknotesIcon,
+  WalletIcon,
+  Cog6ToothIcon,
+  CubeIcon,
+  AdjustmentsHorizontalIcon,
+} from '@heroicons/react/24/outline';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -20,22 +28,18 @@ type StatCardProps = {
   value: string | number | React.ReactNode;
   subtext?: string;
   className?: string;
-  icon: FontAwesomeIconProps['icon'];
+  icon?: React.ReactNode;
 };
 
-function StatCard({ title, value, subtext, icon, className }: StatCardProps) {
+function StatCard({ title, value, subtext, className, icon }: StatCardProps) {
   return (
-    <div className={`col-md-4 col-sm-6 ${className || ''}`}>
-      <div className="panel stat-card">
-        <div className="panel-body">
-          <div className="stat-icon">
-            <FontAwesomeIcon icon={icon} />
-          </div>
-          <div className="stat-info">
-            <span className="stat-title">{title}</span>
-            <span className="stat-value">{value}</span>
-            <span className="stat-subtext">{subtext || '\u00A0'}</span>
-          </div>
+    <div className={`col-span-1 ${className || ''}`}>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 min-h-[140px] h-full flex items-center gap-4">
+        {icon}
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+          <p className="text-2xl font-bold text-blue-400">{value}</p>
+          {subtext && <p className="text-sm text-gray-400">{subtext}</p>}
         </div>
       </div>
     </div>
@@ -51,10 +55,8 @@ export default function AccountPage() {
 
   if (!accountData || !accountData.stats) {
     return (
-      <div className="container">
-        <div className="page-header">
-          <h1>Account not found</h1>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-4">Account not found</h1>
         <p>The account with address {address} was not found on this pool.</p>
       </div>
     );
@@ -76,47 +78,47 @@ export default function AccountPage() {
 
   return (
     <div>
-      <div className="page-header-container">
-        <div className="container">
-          <h1>
-            <FontAwesomeIcon icon={faUser} /> Account Details
-          </h1>
-          <h4 className="hash">
-            <FontAwesomeIcon icon={faWallet} />{' '}
-            <a href={`https://explorer.digitalregion.jp/address/${address}`} target="_blank" rel="noopener noreferrer" className="hash">
+      <div className="bg-gray-800 border-b border-gray-700">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-2 text-gray-100">Account Details</h1>
+          <h4 className="text-lg text-gray-400 flex items-center gap-2">
+            <WalletIcon className="w-6 h-6 text-blue-400" />
+            <a href={`https://explorer.digitalregion.jp/address/${address}`} target="_blank" rel="noopener noreferrer" className="hover:text-blue-400">
               {address}
             </a>
           </h4>
         </div>
       </div>
 
-      <div className="container">
-        <div className="row">
-          <StatCard icon={faHourglassHalf} title="Immature Balance" value={`${(stats.immature / 1e9).toFixed(8)} VBC`} subtext="Awaiting blocks to mature." />
-          <StatCard icon={faMoneyBillWave} title="Pending Balance" value={`${(stats.balance / 1e9).toFixed(8)} VBC`} subtext="Credited coins awaiting payout." />
-          <StatCard icon={faCheckCircle} title="Total Paid" value={`${(stats.paid / 1e9).toFixed(8)} VBC`} />
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatCard icon={<GiftIcon className="w-8 h-8 text-pink-400" />} title="Immature Balance" value={`${(stats.immature / 1e9).toFixed(8)} VBC`} subtext="Awaiting blocks to mature." />
+          <StatCard icon={<CurrencyDollarIcon className="w-8 h-8 text-green-400" />} title="Pending Balance" value={`${(stats.balance / 1e9).toFixed(8)} VBC`} subtext="Credited coins awaiting payout." />
+          <StatCard icon={<BanknotesIcon className="w-8 h-8 text-cyan-400" />} title="Total Paid" value={`${(stats.paid / 1e9).toFixed(8)} VBC`} />
         </div>
-        <div className="row">
-          <StatCard icon={faUsers} title="Workers Online" value={`${workersOnline || 0} Workers`} />
-          <StatCard icon={faTachometerAlt} title="Hashrate (30m)" value={formatHashrate(accountData.currentHashrate || 0)} />
-          <StatCard icon={faTachometerAlt} title="Hashrate (3h)" value={formatHashrate(accountData.hashrate || 0)} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+          <StatCard icon={<Cog6ToothIcon className="w-8 h-8 text-blue-400" />} title="Workers Online" value={`${workersOnline || 0} Workers`} />
+          <StatCard icon={<CpuChipIcon className="w-8 h-8 text-green-400" />} title="Hashrate (30m)" value={formatHashrate(accountData.currentHashrate || 0)} />
+          <StatCard icon={<CpuChipIcon className="w-8 h-8 text-yellow-400" />} title="Hashrate (3h)" value={formatHashrate(accountData.hashrate || 0)} />
         </div>
-        <div className="row">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           <StatCard 
-            icon={faClock} 
+            icon={<ClockIcon className="w-8 h-8 text-cyan-400" />} 
             title="Last Share Submitted" 
             value={<TimeAgo timestamp={stats.lastShare} agoOnly={true} />} 
             subtext={stats.lastShare ? new Date(stats.lastShare * 1000).toLocaleString() : 'N/A'} 
           />
-          <StatCard icon={faCube} title="Blocks Found" value={`${stats.blocksFound} Blocks`} />
-          <StatCard icon={faPaperPlane} title="Total Payments" value={`${paymentsTotal || 0} Payouts`} />
+          <StatCard icon={<CubeIcon className="w-8 h-8 text-pink-400" />} title="Blocks Found" value={`${stats.blocksFound} Blocks`} />
+          <StatCard icon={<ArrowPathIcon className="w-8 h-8 text-blue-400" />} title="Total Payments" value={`${paymentsTotal || 0} Payouts`} />
         </div>
-        <div className="row">
-          <StatCard icon={faChartPie} title="Your Round Share" value={`${yourRoundSharePercent.toFixed(2)}%`} subtext="Contribution to current round." />
-          <StatCard icon={faCalendarAlt} title="Epoch Switch" value={<Countdown to={epochSwitchTimestamp} />} subtext={`In ${blocksUntilEpoch} blocks`} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <StatCard icon={<ArrowTrendingUpIcon className="w-8 h-8 text-orange-400" />} title="Your Round Share" value={`${yourRoundSharePercent.toFixed(2)}%`} subtext="Contribution to current round." />
+          <StatCard icon={<AdjustmentsHorizontalIcon className="w-8 h-8 text-purple-400" />} title="Epoch Switch" value={<Countdown to={epochSwitchTimestamp} />} subtext={`In ${blocksUntilEpoch} blocks`} />
         </div>
 
-        <AccountTabs workers={workerList} payments={payments || []} />
+        <div className="mt-8">
+          <AccountTabs workers={workerList} payments={payments || []} />
+        </div>
       </div>
     </div>
   );

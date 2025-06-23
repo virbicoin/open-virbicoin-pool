@@ -1,42 +1,133 @@
+@import "tailwindcss";
+
+/* Links */
+a {
+	color: #66bfff;
+}
+a:hover {
+	color: #89cff0;
+	text-decoration: none;
+}
+
 /* Custom styles from old app.css, adapted for Next.js */
-body {
-	background-color: #121212;
-	color: #E0E0E0;
-	padding-top: 70px;
-	margin-bottom: 60px; /* Footer height */
-}
-
-h1, h2, h3, h4, h5, h6 {
-	color: #FFFFFF;
-}
-
-.container {
-	width: 100%;
-	padding-right: 15px;
-	padding-left: 15px;
-	margin-right: auto;
-	margin-left: auto;
-}
-
-@media (min-width: 768px) {
-  .container {
-    width: 750px;
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-200;
+    padding-top: 0;
+    margin-bottom: 0;
   }
-}
-@media (min-width: 992px) {
-  .container {
-    width: 970px;
-  }
-}
-@media (min-width: 1200px) {
-  .container {
-    width: 1170px;
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-white;
   }
 }
 
-@media (min-width: 1440px) {
+@layer components {
   .container {
-    width: 1400px;
+    @apply w-full px-2 mx-auto;
+  }
+
+  @media (min-width: 768px) {
+    .container {
+      @apply max-w-[750px];
+    }
+  }
+  @media (min-width: 992px) {
+    .container {
+      @apply max-w-[970px];
+    }
+  }
+  @media (min-width: 1200px) {
+    .container {
+      @apply max-w-[1170px];
+    }
+  }
+  @media (min-width: 1440px) {
+    .container {
+      @apply max-w-[1400px];
+    }
+  }
+
+  .panel {
+    @apply bg-gray-800 border border-gray-700 rounded-lg mb-5;
+  }
+
+  .panel-body {
+    @apply p-5;
+  }
+
+  .table {
+    @apply w-full bg-gray-800 text-gray-200;
+  }
+
+  .table > thead > tr > th {
+    @apply border-b-2 border-gray-700 text-white p-3;
+  }
+
+  .table > tbody > tr > td {
+    @apply border-t border-gray-700 p-3;
+  }
+
+  .table-striped > tbody > tr:nth-of-type(odd) {
+    @apply bg-gray-700;
+  }
+
+  .table-hover > tbody > tr:hover {
+    @apply bg-gray-600 text-white;
+  }
+
+  .form-control {
+    @apply bg-gray-700 border border-gray-600 text-gray-200 rounded px-3 py-2;
+  }
+
+  .form-control:focus {
+    @apply border-blue-500 outline-none;
+  }
+
+  .btn-primary {
+    @apply bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded;
+  }
+
+  .hash {
+    @apply font-mono;
+  }
+
+  .nav-link {
+    @apply px-3 py-2;
+  }
+
+  .nav-link.active {
+    @apply text-white bg-blue-600;
+  }
+
+  .tab-link {
+    color: inherit !important;
+  }
+
+  .tab-link-active {
+    color: inherit !important;
+  }
+
+  .tab-link-inactive {
+    color: #9ca3af !important; /* Tailwind text-gray-400 */
+  }
+}
+
+@layer utilities {
+  .page-header-container {
+    @apply bg-gray-800 border-b border-gray-700 -mt-5 mb-5 w-full;
+  }
+
+  .page-header-container h1 {
+    @apply text-2xl m-0;
+  }
+
+  .page-header-container p {
+    @apply mt-1 mb-0;
+  }
+
+  .page-header-container .container {
+    @apply pt-5;
   }
 }
 
@@ -147,15 +238,6 @@ h1, h2, h3, h4, h5, h6 {
 .btn-primary:hover, .btn-primary:focus {
 	background-color: #55aaff;
 	border-color: #55aaff;
-}
-
-/* Links */
-a {
-	color: #66bfff;
-}
-a:hover {
-	color: #89cff0;
-	text-decoration: none;
 }
 
 /* Footer */
@@ -299,4 +381,18 @@ html {
   color: #fff !important;
 }
 
-/* 下線だけ色を残す場合はul.nav-tabsのborderBottomで調整 */
+.nav-link {
+  color: inherit !important;
+  transition: background 0.2s, border-radius 0.2s, color 0.2s;
+}
+.nav-link:hover {
+  background: #004a7c !important;
+  border-radius: 0.375rem !important; /* rounded-md */
+  padding-left: 0.75rem !important;   /* px-3 */
+  padding-right: 0.75rem !important;
+  padding-top: 0.5rem !important;     /* py-2 */
+  padding-bottom: 0.5rem !important;
+  transition-property: background, border-radius, color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}

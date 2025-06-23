@@ -1,39 +1,62 @@
-import ActiveLink from './ActiveLink';
-import {
-  faGaugeHigh,
-  faCubes,
-} from "@fortawesome/free-solid-svg-icons";
-import { faList, faBook, faQuestionCircle } from '@fortawesome/free-solid-svg-icons';
-import Link from 'next/link';
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { HomeIcon, QuestionMarkCircleIcon, InformationCircleIcon, CubeTransparentIcon, CurrencyDollarIcon, UsersIcon } from '@heroicons/react/24/outline'
 
-export default async function Header() {
+export default function Header() {
+  const pathname = usePathname()
+
   return (
-    <nav className="navbar navbar-default" role="navigation">
-      <div className="container">
-        <div className="navbar-header">
-          <button type="button" className="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse">
-            <span className="sr-only">Toggle navigation</span>
-            <span className="icon-bar"></span>
-            <span className="icon-bar"></span>
-            <span className="icon-bar"></span>
-          </button>
-          <Link href="/" className="navbar-brand" style={{ color: 'white' }}>
-            VirbiCoin Pool
-          </Link>
+    <header className="bg-gray-900 border-b border-gray-800">
+      <nav className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2 text-xl font-bold text-gray-100">
+              <CubeTransparentIcon className="w-7 h-7 text-gray-100" />
+              <span>VirBiCoin Pool</span>
+            </Link>
+          </div>
+          <div className="hidden md:block">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/"
+                className={`nav-link flex items-center gap-1 ${pathname === '/' ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <HomeIcon className="w-5 h-5 text-inherit" /> Dashboard
+              </Link>
+              <Link
+                href="/help"
+                className={`nav-link flex items-center gap-1 ${pathname === '/help' ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <QuestionMarkCircleIcon className="w-5 h-5 text-inherit" /> Getting Started
+              </Link>
+              <Link
+                href="/about"
+                className={`nav-link flex items-center gap-1 ${pathname === '/about' ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <InformationCircleIcon className="w-5 h-5 text-inherit" /> About
+              </Link>
+              <Link
+                href="/blocks"
+                className={`nav-link flex items-center gap-1 ${pathname.startsWith('/blocks') ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <CubeTransparentIcon className="w-5 h-5 text-inherit" /> Pool Blocks
+              </Link>
+              <Link
+                href="/payments"
+                className={`nav-link flex items-center gap-1 ${pathname === '/payments' ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <CurrencyDollarIcon className="w-5 h-5 text-inherit" /> Payments
+              </Link>
+              <Link
+                href="/miners"
+                className={`nav-link flex items-center gap-1 ${pathname === '/miners' ? 'font-bold !text-gray-100' : '!text-gray-400 hover:!text-gray-300'}`}
+              >
+                <UsersIcon className="w-5 h-5 text-inherit" /> Miners
+              </Link>
+            </div>
+          </div>
         </div>
-        <div className="collapse navbar-collapse" id="navbar-collapse">
-          <ul className="nav navbar-nav navbar-left">
-            <ActiveLink href="/" text="Home" icon={faGaugeHigh} />
-            <ActiveLink href="/blocks" text="Blocks" icon={faCubes} />
-            <ActiveLink href="/payments" text="Payments" icon={faList} />
-            <ActiveLink href="/miners" text="Miners" icon={faBook} />
-            <ActiveLink href="/about" text="About" icon={faBook} />
-            <ActiveLink href="/help" text="Help" icon={faQuestionCircle} />
-          </ul>
-          <ul className="nav navbar-nav navbar-right">
-          </ul>
-        </div>
-      </div>
-    </nav>
-  );
+      </nav>
+    </header>
+  )
 } 

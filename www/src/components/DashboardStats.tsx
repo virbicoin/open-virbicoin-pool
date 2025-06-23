@@ -1,89 +1,176 @@
 "use client";
 
 import useSWR from "swr";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUsers, faTachometerAlt, faGlobe, faCube, faClock, faChartPie, faHistory, faHandHoldingUsd, faWallet, faGift, faExchangeAlt
-} from "@fortawesome/free-solid-svg-icons";
-import { formatHashrate, formatDifficulty, formatLargeNumber } from "@/lib/formatters";
-import { StatsData } from "@/lib/api";
+import { formatHashrate } from "@/lib/formatters";
 import TimeAgo from "@/components/TimeAgo";
-import { IconDefinition } from '@fortawesome/fontawesome-svg-core';
+import {
+  UserGroupIcon,
+  CpuChipIcon,
+  GlobeAltIcon,
+  ChartBarIcon,
+  CubeIcon,
+  ClockIcon,
+  AdjustmentsHorizontalIcon,
+  ArrowPathIcon,
+  CurrencyDollarIcon,
+  BanknotesIcon,
+  GiftIcon,
+  CreditCardIcon
+} from '@heroicons/react/24/outline';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-function formatDateYMDHMS(date: Date) {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+interface Stats {
+  hashrate: number
+  miners: number
+  workers: number
+  lastBlockFound: number
+  networkHashrate?: number
+  networkDifficulty?: number
+  blockHeight?: number
+  roundVariance?: number
 }
 
-type StatCardProps = {
-  icon: IconDefinition;
-  title: string;
-  value: React.ReactNode;
-  subtext?: string;
-};
+interface DashboardStatsProps {
+  stats: Stats
+}
 
-const StatCard = ({ icon, title, value, subtext }: StatCardProps) => (
-  <div className="col-md-4 col-sm-6">
-    <div className="panel stat-card">
-      <div className="panel-body">
-        <div className="stat-icon">
-          <FontAwesomeIcon icon={icon} />
+function calcNetworkHashrate(difficulty: number, blockTime: number = 10) {
+  if (!difficulty || !blockTime) return 0;
+  return difficulty / blockTime;
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+
+export default function DashboardStats({ stats: initialStats }: DashboardStatsProps) {
+  const fetcher = (url: string) => fetch(`${API_BASE_URL}${url}`).then(res => res.json());
+  const { data } = useSWR("/api/stats", fetcher, { refreshInterval: 5000, fallbackData: initialStats });
+
+  const latestNode = data?.nodes && data.nodes.length > 0 ? data.nodes[0] : null;
+  const networkDifficulty = latestNode ? parseFloat(latestNode.difficulty) : (data?.stats?.networkDifficulty || 0);
+  const blockHeight = latestNode ? parseInt(latestNode.height) : (data?.stats?.height || 0);
+  const networkHashrate = calcNetworkHashrate(networkDifficulty, 10);
+
+  let roundVariance = data?.stats?.roundVariance;
+  if (roundVariance === undefined || roundVariance === 0) {
+    const roundShares = data?.stats?.roundShares;
+    if (roundShares && networkDifficulty) {
+      roundVariance = (roundShares / networkDifficulty) * 100;
+    } else {
+      roundVariance = 0;
+    }
+  }
+
+  const stats = {
+    hashrate: data?.hashrate || 0,
+    miners: data?.minersTotal || 0,
+    workers: data?.minersTotal || 0,
+    lastBlockFound: data?.stats?.lastBlockFound || 0,
+    networkHashrate,
+    networkDifficulty,
+    blockHeight,
+    roundVariance,
+  };
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <UserGroupIcon className="w-8 h-8 text-blue-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Miners Online</h3>
+          <p className="text-2xl font-bold text-blue-500">{stats.miners} Miners</p>
         </div>
-        <div className="stat-info">
-          <span className="stat-title">{title}</span>
-          <span className="stat-value">{value}</span>
-          <span className="stat-subtext">{subtext || '\u00A0'}</span>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <CpuChipIcon className="w-8 h-8 text-green-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Pool Hashrate</h3>
+          <p className="text-2xl font-bold text-blue-500">{formatHashrate(stats.hashrate)}</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <GlobeAltIcon className="w-8 h-8 text-yellow-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Network Hashrate</h3>
+          <p className="text-2xl font-bold text-blue-500">{formatHashrate(stats.networkHashrate || 0)}</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <ChartBarIcon className="w-8 h-8 text-pink-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Network Difficulty</h3>
+          <p className="text-2xl font-bold text-blue-500">{((stats.networkDifficulty || 0) / 1e9).toFixed(2)} G</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <CubeIcon className="w-8 h-8 text-orange-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Blockchain Height</h3>
+          <p className="text-2xl font-bold text-blue-500">{((stats.blockHeight || 0) / 1000).toFixed(2)} K Blocks</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <ClockIcon className="w-8 h-8 text-cyan-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Last Block Found</h3>
+          <p className="text-2xl font-bold text-blue-500">
+            {stats.lastBlockFound ? (
+              <TimeAgo timestamp={stats.lastBlockFound} agoOnly={true} />
+            ) : (
+              'Never'
+            )}
+          </p>
+          {stats.lastBlockFound ? (
+            <span className="text-sm text-gray-400 block mt-1">
+              {new Date(stats.lastBlockFound * 1000).toLocaleString()}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <AdjustmentsHorizontalIcon className="w-8 h-8 text-purple-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Round Variance</h3>
+          <p className="text-2xl font-bold text-blue-500">
+            {stats.roundVariance ? `${stats.roundVariance.toFixed(2)}%` : '0%'}
+          </p>
+          <span className="text-sm text-gray-400 block mt-1">Lower is better</span>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <ArrowPathIcon className="w-8 h-8 text-blue-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Payouts</h3>
+          <p className="text-2xl font-bold text-blue-500">Every 2 hours</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <CurrencyDollarIcon className="w-8 h-8 text-green-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Pool Fee</h3>
+          <p className="text-2xl font-bold text-blue-500">1.0%</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <CreditCardIcon className="w-8 h-8 text-yellow-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Minimum Payout</h3>
+          <p className="text-2xl font-bold text-blue-500">0.1 VBC</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <GiftIcon className="w-8 h-8 text-pink-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Block Reward</h3>
+          <p className="text-2xl font-bold text-blue-500">8 VBC</p>
+        </div>
+      </div>
+      <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
+        <BanknotesIcon className="w-8 h-8 text-cyan-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-gray-300 mb-1">Payment Method</h3>
+          <p className="text-2xl font-bold text-blue-500">PROP</p>
+          <span className="text-sm text-gray-400 block mt-1">Stable and profitable pool with regular payouts</span>
         </div>
       </div>
     </div>
-  </div>
-);
-
-type DashboardStatsProps = {
-  initialStats: StatsData;
-};
-
-export default function DashboardStats({ initialStats }: DashboardStatsProps) {
-  const { data: stats = initialStats } = useSWR(
-    API_BASE_URL + "/api/stats",
-    fetcher,
-    { refreshInterval: 5000 }
-  );
-
-  const firstNode = stats.nodes?.[0];
-  const networkDifficulty = firstNode ? parseFloat(firstNode.difficulty) : 0;
-  const blockTime = 12; // Blocktime is 12 seconds
-  const networkHashrate = blockTime > 0 ? networkDifficulty / blockTime : 0;
-  const roundShares = stats.stats?.roundShares || 0;
-  const roundVariance = networkDifficulty > 0 ? (roundShares / networkDifficulty) * 100 : 0;
-  const lastBlockFoundTimestamp = stats.stats?.lastBlockFound;
-  const lastBlockFoundDate = lastBlockFoundTimestamp ? formatDateYMDHMS(new Date(lastBlockFoundTimestamp * 1000)) : 'N/A';
-
-  return (
-    <div className="row">
-      <StatCard icon={faUsers} title="Miners Online" value={`${stats.minersTotal?.toString() || '0'} Miners`} />
-      <StatCard icon={faTachometerAlt} title="Pool Hashrate" value={formatHashrate(stats.hashrate)} />
-      <StatCard icon={faTachometerAlt} title="Network Hashrate" value={formatHashrate(networkHashrate)} />
-      <StatCard icon={faGlobe} title="Network Difficulty" value={formatDifficulty(networkDifficulty)} />
-      <StatCard 
-        icon={faCube} 
-        title="Blockchain Height" 
-        value={
-          <>
-            {formatLargeNumber(parseInt(stats.nodes[0]?.height || '0', 10))} Blocks
-          </>
-        } 
-      />
-      <StatCard icon={faClock} title="Last Block Found" value={<TimeAgo timestamp={lastBlockFoundTimestamp} agoOnly={true} />} subtext={lastBlockFoundDate} />
-      <StatCard icon={faChartPie} title="Round Variance" value={`${roundVariance.toFixed(2)}%`} subtext="Lower is better" />
-      <StatCard icon={faHistory} title="Payouts" value="Every 2 hours" />
-      <StatCard icon={faHandHoldingUsd} title="Pool Fee" value="1.0%" />
-      <StatCard icon={faWallet} title="Minimum Payout" value="0.1 VBC" />
-      <StatCard icon={faGift} title="Block Reward" value="8 VBC" />
-      <StatCard icon={faExchangeAlt} title="Payment Method" value="PROP" subtext="Stable and profitable pool with regular payouts"/>
-    </div>
-  );
+  )
 }

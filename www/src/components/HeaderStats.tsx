@@ -1,11 +1,42 @@
 "use client";
 
-import { faCubes, faUsers } from '@fortawesome/free-solid-svg-icons';
-import ActiveLink from '@/components/ActiveLink';
+import Link from 'next/link';
 import useSWR from "swr";
+import {
+  CubeIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 const fetcher = (url: string) => fetch(url).then(res => res.json());
+
+interface NavLinkProps {
+  href: string;
+  children: React.ReactNode;
+  badge?: number;
+  badgeColor?: string;
+}
+
+const NavLink = ({ href, children, badge, badgeColor = 'bg-green-500' }: NavLinkProps) => {
+  const isActive = typeof window !== 'undefined' && window.location.pathname === href;
+  return (
+    <Link 
+      href={href} 
+      className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200
+        ${isActive 
+          ? 'text-text-primary nav-link text-gray-200' 
+          : 'text-text-secondary nav-link text-gray-200 hover:text-text-primary'
+        }`}
+    >
+      {children}
+      {badge && badge > 0 && (
+        <span className={`ml-2 px-2 py-0.5 text-xs font-semibold rounded-full text-white ${badgeColor}`}>
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+};
 
 const HeaderStats = () => {
   const { data: stats } = useSWR(API_BASE_URL + "/api/stats", fetcher, { refreshInterval: 5000 });
@@ -14,20 +45,18 @@ const HeaderStats = () => {
   const minersTotal = stats?.minersTotal ?? 0;
   const poolBlocksBadge = immatureCount + pendingCount;
 
-  return <>
-    <ActiveLink href="/blocks" icon={faCubes}>
-      Pool Blocks
-      {poolBlocksBadge > 0 && (
-        <span className="badge" style={{ background: '#4caf50', marginLeft: 6, fontSize: '80%', verticalAlign: 'top' }}>{poolBlocksBadge}</span>
-      )}
-    </ActiveLink>
-    <ActiveLink href="/miners" icon={faUsers}>
-      Miners
-      {minersTotal > 0 && (
-        <span className="badge" style={{ background: '#337ab7', marginLeft: 6, fontSize: '80%', verticalAlign: 'top' }}>{minersTotal}</span>
-      )}
-    </ActiveLink>
-  </>;
+  return (
+    <div className="flex items-center space-x-2">
+      <NavLink href="/blocks" badge={poolBlocksBadge} badgeColor="bg-green-600">
+        <CubeIcon className="w-5 h-5 mr-1" />
+        Pool Blocks
+      </NavLink>
+      <NavLink href="/miners" badge={minersTotal} badgeColor="bg-blue-500">
+        <UsersIcon className="w-5 h-5 mr-1" />
+        Miners
+      </NavLink>
+    </div>
+  );
 };
 
 export default HeaderStats; 
