@@ -1,0 +1,28 @@
+version: 2.1
+
+executors:
+  go-executor:
+    docker:
+      - image: circleci/golang:1.22
+    working_directory: ~/go/src/github.com/virbicoin/open-virbicoin-pool
+
+jobs:
+  build:
+    executor: go-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: go mod download
+      - run:
+          name: Run tests
+          command: go test ./...
+      - run:
+          name: Build binary
+          command: go build -o open-virbicoin-pool
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build

@@ -1,8 +1,8 @@
 ## Open Source Ethereum Mining Pool
 
-![Miner's stats page](https://user-images.githubusercontent.com/7374093/31591180-43c72364-b236-11e7-8d47-726cd66b876a.png)
+![Miner's stats page](https://github.com/user-attachments/assets/4c88b87f-a9da-4dde-9efc-8e95a16f697b)
 
-[![Join the chat at https://gitter.im/virbicoin/open-virbicoin-pool](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/virbicoin/open-virbicoin-pool?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/virbicoin/open-virbicoin-pool.svg?branch=develop)](https://travis-ci.org/virbicoin/open-virbicoin-pool) [![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
+[![Join the chat at https://matrix.to/#/#open-virbicoin-pool:gitter.im](https://badges.gitter.im/Join%20Chat.svg)](https://matrix.to/#/#open-virbicoin-pool:gitter.im?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/virbicoin/open-virbicoin-pool.svg?branch=main)](https://travis-ci.org/virbicoin/open-virbicoin-pool) [![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
 
 ### Features
 
