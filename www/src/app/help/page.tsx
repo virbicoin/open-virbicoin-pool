@@ -105,9 +105,7 @@ export default function HelpPage() {
           <div className="panel-body">
             <p>
               Payouts are sent automatically every 2 hours for all balances
-              above <strong>0.5 VBC</strong>, or <strong>0.1 VBC</strong> if you
-              have been mining for more than 7 days and your balance is
-              non-zero. The pool covers all transaction fees.
+              above <strong>0.1 VBC</strong>.
             </p>
           </div>
         </div>
