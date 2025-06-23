@@ -1,17 +1,17 @@
-## Open Source Ethereum Mining Pool
+## Open Source VirBiCoin Mining Pool
 
 ![Miner's stats page](https://github.com/user-attachments/assets/4c88b87f-a9da-4dde-9efc-8e95a16f697b)
 
-[![Join the chat at https://matrix.to/#/#open-virbicoin-pool:gitter.im](https://badges.gitter.im/Join%20Chat.svg)](https://matrix.to/#/#open-virbicoin-pool:gitter.im?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://travis-ci.org/virbicoin/open-virbicoin-pool.svg?branch=main)](https://travis-ci.org/virbicoin/open-virbicoin-pool) [![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
+[![Join the chat at https://matrix.to/#/#open-virbicoin-pool:gitter.im](https://badges.gitter.im/Join%20Chat.svg)](https://matrix.to/#/#open-virbicoin-pool:gitter.im?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![GitHub CI](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml/badge.svg)](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
 
 ### Features
 
-**This pool is being further developed to provide an easy to use pool for Ethereum miners. This software is functional however an optimised release of the pool is expected soon. Testing and bug submissions are welcome!**
+**This pool is being further developed to provide an easy to use pool for VirBiCOin miners. This software is functional however an optimised release of the pool is expected soon. Testing and bug submissions are welcome!**
 
 * Support for HTTP and Stratum mining
 * Detailed block stats with luck percentage and full reward
-* Failover geth instances: geth high availability built in
-* Modern beautiful Ember.js frontend
+* Failover gvbc instances: gvbc high availability built in
+* Modern beautiful Next.js frontend
 * Separate stats for workers: can highlight timed-out workers so miners can perform maintenance of rigs
 * JSON-API for stats
 
@@ -24,13 +24,13 @@
 
 Dependencies:
 
-  * go >= 1.9 (version 1.22.11 works for me)
-  * geth or parity
+  * go >= 1.9 (version 1.22.12 works for me)
+  * gvbc or parity-virbicoin
   * redis-server >= 2.8.0
-  * nodejs >= 4 LTS
+  * nodejs >= 16 LTS
   * nginx
 
-**I highly recommend to use Ubuntu 16.04 LTS.**
+**I highly recommend to use Ubuntu 16.04 LTS or higher.**
 
 First install  [go-virbicoin](https://github.com/virbicoin/go-virbicoin/wiki/Installation-Instructions-for-Ubuntu).
 
@@ -58,16 +58,14 @@ The frontend is a single-page Ember.js application that polls the pool API to re
 
     cd www
 
-Change <code>ApiUrl: '//example.net/'</code> in <code>www/config/environment.js</code> to match your domain name. Also don't forget to adjust other options.
+Change <code>ApiUrl: 'http://example.net'</code> in <code>www/.env</code> to match your domain name. Also don't forget to adjust other options.
 
-    npm install -g ember-cli@2.9.1
-    npm install -g bower
     npm install
-    bower install
-    ./build.sh
+    npm run build
+    npm run start
 
 Configure nginx to serve API on <code>/api</code> subdirectory.
-Configure nginx to serve <code>www/dist</code> as static website.
+Configure nginx to reverse proxy on<code>http://localhost:3000</code> as website.
 
 #### Serving API using nginx
 
@@ -91,7 +89,7 @@ You can customize the layout using built-in web server with live reload:
 
 **Don't use built-in web server in production**.
 
-Check out <code>www/app/templates</code> directory and edit these templates
+Check out <code>www/app</code> directory and edit these templates
 in order to customise the frontend.
 
 ### Configuration
@@ -106,7 +104,7 @@ otherwise you will get errors on start because of JSON comments.**
   // Set to the number of CPU cores of your server
   "threads": 2,
   // Prefix for keys in redis store
-  "coin": "eth",
+  "coin": "vbc",
   // Give unique name to each instance
   "name": "main",
 
