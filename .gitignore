@@ -4,7 +4,6 @@ open-ethereum-pool
 
 /build/_workspace/
 /build/bin/
-*.json
 open*pool
 config.json
 *.log
