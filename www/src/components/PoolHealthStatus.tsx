@@ -216,8 +216,8 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 
     try {
-        // 実際のAPIエンドポイントをチェック
-        const response = await fetch(`https://${apiEndpoint}/api/stats`, {
+        // HTTPでAPIエンドポイントをチェック（HTTPSは利用できないため）
+        const response = await fetch(`http://${apiEndpoint}/api/stats`, {
             method: 'GET',
             signal: AbortSignal.timeout(10000), // 10秒タイムアウト
             mode: 'cors'
@@ -234,7 +234,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
             };
         } else {
             // HTTPエラーの場合でも基本的な接続確認を試す
-            await fetch(`https://${apiEndpoint}`, {
+            await fetch(`http://${apiEndpoint}`, {
                 method: 'HEAD',
                 signal: AbortSignal.timeout(5000),
                 mode: 'no-cors'
@@ -245,29 +245,12 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                 lastChecked: Date.now()
             };
         }
-    } catch {
-        try {
-            // HTTPS失敗時はHTTPで再試行
-            const startTime2 = Date.now();
-            const response = await fetch(`http://${apiEndpoint}/api/stats`, {
-                method: 'GET',
-                signal: AbortSignal.timeout(5000),
-                mode: 'cors'
-            });
-            const endTime2 = Date.now();
-
-            return {
-                isHealthy: response.ok,
-                latency: response.ok ? endTime2 - startTime2 : undefined,
-                lastChecked: Date.now()
-            };
-        } catch (error) {
-            console.error(`Health check failed for ${url} (${apiEndpoint}):`, error);
-            return {
-                isHealthy: false,
-                lastChecked: Date.now()
-            };
-        }
+    } catch (error) {
+        console.error(`Health check failed for ${url} (${apiEndpoint}):`, error);
+        return {
+            isHealthy: false,
+            lastChecked: Date.now()
+        };
     }
 }
 
