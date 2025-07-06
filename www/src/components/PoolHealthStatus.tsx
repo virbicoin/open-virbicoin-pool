@@ -190,38 +190,23 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         };
     }
 
-    // 本番環境では実際のAPIエンドポイントをチェック
-    if (url === 'stratum4.digitalregion.jp' || url === 'stratum5.digitalregion.jp') {
-        return {
-            isHealthy: false,
-            latency: undefined,
-            lastChecked: Date.now()
-        };
-    }
-
-    // stratumサーバーを実際のpoolエンドポイントにマッピング
-    const apiEndpointMapping: { [key: string]: string } = {
-        'stratum.digitalregion.jp': 'pool',      // メインプール（HTTPS対応済み）
-        'stratum1.digitalregion.jp': 'pool1',    // India pool
-        'stratum2.digitalregion.jp': 'pool2',    // Japan pool
-        'stratum3.digitalregion.jp': 'pool3'     // USA pool
+    // 本番環境では Nginx プロキシパスを使用
+    const proxyPathMapping: Record<string, string> = {
+        'stratum.digitalregion.jp': '/api/stats',
+        'stratum1.digitalregion.jp': '/api/pool1/stats',
+        'stratum2.digitalregion.jp': '/api/pool2/stats',
+        'stratum3.digitalregion.jp': '/api/pool3/stats'
     };
-
-    const poolId = apiEndpointMapping[url];
-    if (!poolId) {
-        return {
-            isHealthy: false,
-            lastChecked: Date.now()
-        };
+    const proxyPath = proxyPathMapping[url];
+    if (!proxyPath) {
+        return { isHealthy: false, lastChecked: Date.now() };
     }
 
     try {
-        // プロキシエンドポイントを使用してHTTPS経由でアクセス
-        const baseUrl = typeof window === 'undefined' ? 'https://pool.digitalregion.jp' : '';
-        const response = await fetch(`${baseUrl}/api/proxy/${poolId}/stats`, {
+        // Nginx プロキシに対して HTTPS 経由でリクエスト
+        const response = await fetch(proxyPath, {
             method: 'GET',
             signal: AbortSignal.timeout(15000), // 15秒タイムアウト
-            mode: 'cors',
             headers: {
                 'Accept': 'application/json',
                 'Cache-Control': 'no-cache'
@@ -231,7 +216,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const endTime = Date.now();
         const latency = endTime - startTime;
 
-        console.log(`[Health] ${url} (${poolId}): ${response.status} in ${latency}ms`);
+        console.log(`[Health] ${url} (${proxyPath}): ${response.status} in ${latency}ms`);
 
         if (response.ok) {
             const data = await response.json();
@@ -252,14 +237,14 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         }
         
         // レスポンスエラーの場合
-        console.warn(`[Health] HTTP error for ${url} (${poolId}): ${response.status}`);
+        console.warn(`[Health] HTTP error for ${url} (${proxyPath}): ${response.status}`);
         return {
             isHealthy: false,
             lastChecked: Date.now()
         };
         
     } catch (error) {
-        console.error(`Health check failed for ${url} (${poolId}):`, error);
+        console.error(`Health check failed for ${url} (${proxyPath}):`, error);
         return {
             isHealthy: false,
             lastChecked: Date.now()
