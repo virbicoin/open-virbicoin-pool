@@ -136,7 +136,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     const startTime = Date.now();
 
     // 開発環境での模擬データ
-    if (process.env.NODE_ENV === 'development') {
+    if ((process.env.NODE_ENV as string) === 'development') {
         // プールごとに異なる確率でオンライン状態をシミュレート
         const healthProbability = {
             'stratum.digitalregion.jp': 0.90,  // Global - 90%の確率でオンライン
@@ -190,21 +190,27 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         };
     }
 
-    // 本番環境では Nginx プロキシパスを使用
-    const proxyPathMapping: Record<string, string> = {
-        'stratum.digitalregion.jp': '/api/stats',
-        'stratum1.digitalregion.jp': '/api/pool1/stats',
-        'stratum2.digitalregion.jp': '/api/pool2/stats',
-        'stratum3.digitalregion.jp': '/api/pool3/stats'
-    };
-    const proxyPath = proxyPathMapping[url];
-    if (!proxyPath) {
+    // リクエストパスの決定: 開発環境は Next.js API ルート、本番環境は Nginx プロキシパス
+    let fetchPath: string | undefined;
+    if ((process.env.NODE_ENV as string) !== 'production') {
+        // 開発モードでは Next.js API プロキシを利用
+        fetchPath = `/api/proxy/${url}/api/stats`;
+    } else {
+        const proxyPathMapping: Record<string, string> = {
+            'stratum.digitalregion.jp': '/api/stats',
+            'stratum1.digitalregion.jp': '/api/pool1/stats',
+            'stratum2.digitalregion.jp': '/api/pool2/stats',
+            'stratum3.digitalregion.jp': '/api/pool3/stats'
+        };
+        fetchPath = proxyPathMapping[url];
+    }
+    if (!fetchPath) {
         return { isHealthy: false, lastChecked: Date.now() };
     }
 
     try {
-        // Nginx プロキシに対して HTTPS 経由でリクエスト
-        const response = await fetch(proxyPath, {
+        // 決定したパスへリクエスト
+        const response = await fetch(fetchPath, {
             method: 'GET',
             signal: AbortSignal.timeout(15000), // 15秒タイムアウト
             headers: {
@@ -214,9 +220,18 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         });
 
         const endTime = Date.now();
-        const latency = endTime - startTime;
+        // X-Proxy-Duration ヘッダーがあればそれを遅延として優先
+        const proxyDuration = response.headers.get('X-Proxy-Duration');
+        let latency: number;
+        if (proxyDuration) {
+            const pd = parseFloat(proxyDuration);
+            // ヘッダー値が小さい場合は秒単位、そうでなければそのまま ms
+            latency = pd > 100 ? pd : pd * 1000;
+        } else {
+            latency = endTime - startTime;
+        }
 
-        console.log(`[Health] ${url} (${proxyPath}): ${response.status} in ${latency}ms`);
+        console.log(`[Health] ${url} (${fetchPath}): ${response.status} in ${latency}ms`);
 
         if (response.ok) {
             const data = await response.json();
@@ -237,14 +252,14 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         }
         
         // レスポンスエラーの場合
-        console.warn(`[Health] HTTP error for ${url} (${proxyPath}): ${response.status}`);
+        console.warn(`[Health] HTTP error for ${url} (${fetchPath}): ${response.status}`);
         return {
             isHealthy: false,
             lastChecked: Date.now()
         };
         
     } catch (error) {
-        console.error(`Health check failed for ${url} (${proxyPath}):`, error);
+        console.error(`Health check failed for ${url} (${fetchPath}):`, error);
         return {
             isHealthy: false,
             lastChecked: Date.now()
