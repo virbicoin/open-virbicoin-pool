@@ -1,7 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import { ServerIcon, CheckCircleIcon, XCircleIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { ServerIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 
 interface PoolNode {
     url: string;
@@ -23,7 +23,7 @@ interface PoolHealthStatusProps {
 }
 
 // 国旗表示コンポーネント
-function FlagIcon({ flag, country, location }: { flag: string; country: string; location: string }) {
+function FlagIcon({ country, location }: { country: string; location: string }) {
     if (country === 'GLOBAL') {
         return (
             <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-500/20 border-blue-400/30 border-2">
@@ -203,7 +203,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
         if (!response.ok) {
             // HTTPエラーの場合、HTTPポートでの基本的な接続確認
-            const basicResponse = await fetch(`https://${url}`, {
+            await fetch(`https://${url}`, {
                 method: 'HEAD',
                 signal: AbortSignal.timeout(5000),
                 mode: 'no-cors'
@@ -220,7 +220,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
             latency,
             lastChecked: Date.now()
         };
-    } catch (error) {
+    } catch {
         try {
             // HTTPS失敗時はHTTPで再試行
             const startTime2 = Date.now();
@@ -236,7 +236,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                 latency: response.ok ? endTime2 - startTime2 : undefined,
                 lastChecked: Date.now()
             };
-        } catch (httpError) {
+        } catch (error) {
             console.error(`Health check failed for ${url}:`, error);
             return {
                 isHealthy: false,
@@ -248,27 +248,98 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
 export default function PoolHealthStatus({ className = "" }: PoolHealthStatusProps) {
     // 各プールのヘルス状態を取得
-    const healthChecks = POOL_NODES.map(node => {
-        const { data: healthData, error } = useSWR(
-            `pool-health-${node.url}`,
-            () => checkPoolHealth(node.url),
-            {
-                refreshInterval: 120000, // 2分ごとに更新（より安定した表示）
-                revalidateOnFocus: false, // フォーカス時の再検証を無効化
-                revalidateOnReconnect: false, // 再接続時の再検証を無効化
-                errorRetryCount: 1, // エラー時のリトライ回数を減らす
-                errorRetryInterval: 60000, // エラー時のリトライ間隔を1分に
-                dedupingInterval: 60000, // 重複リクエストの防止間隔を1分に
-                fallbackData: { isHealthy: false, lastChecked: Date.now() } // デフォルトはオフライン状態
-            }
-        );
-
-        return {
-            ...node,
-            healthData: healthData || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: healthData === undefined && !error
-        };
+    const globalHealth = useSWR(`pool-health-${POOL_NODES[0].url}`, () => checkPoolHealth(POOL_NODES[0].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
     });
+
+    const indiaHealth = useSWR(`pool-health-${POOL_NODES[1].url}`, () => checkPoolHealth(POOL_NODES[1].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const japanHealth = useSWR(`pool-health-${POOL_NODES[2].url}`, () => checkPoolHealth(POOL_NODES[2].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const usaEastHealth = useSWR(`pool-health-${POOL_NODES[3].url}`, () => checkPoolHealth(POOL_NODES[3].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const swedenHealth = useSWR(`pool-health-${POOL_NODES[4].url}`, () => checkPoolHealth(POOL_NODES[4].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const usaWestHealth = useSWR(`pool-health-${POOL_NODES[5].url}`, () => checkPoolHealth(POOL_NODES[5].url), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const healthChecks = [
+        {
+            ...POOL_NODES[0],
+            healthData: globalHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: globalHealth.data === undefined && !globalHealth.error
+        },
+        {
+            ...POOL_NODES[1],
+            healthData: indiaHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: indiaHealth.data === undefined && !indiaHealth.error
+        },
+        {
+            ...POOL_NODES[2],
+            healthData: japanHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: japanHealth.data === undefined && !japanHealth.error
+        },
+        {
+            ...POOL_NODES[3],
+            healthData: usaEastHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: usaEastHealth.data === undefined && !usaEastHealth.error
+        },
+        {
+            ...POOL_NODES[4],
+            healthData: swedenHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: swedenHealth.data === undefined && !swedenHealth.error
+        },
+        {
+            ...POOL_NODES[5],
+            healthData: usaWestHealth.data || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: usaWestHealth.data === undefined && !usaWestHealth.error
+        }
+    ];
 
     // stratum4（Coming Soon）とstratum5（Coming Soon）を除外してアクティブなプールのみカウント
     const activeHealthChecks = healthChecks.filter(check =>
@@ -321,7 +392,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                         <div className="flex items-start gap-4 h-full">
                             {/* 国旗とステータスインジケーター */}
                             <div className="flex-shrink-0 relative">
-                                <FlagIcon flag={pool.flag} country={pool.country} location={pool.location} />
+                                <FlagIcon country={pool.country} location={pool.location} />
                                 {/* ステータスバッジ */}
                                 <div className="absolute -bottom-1 -right-1">
                                     {pool.isLoading ? (
