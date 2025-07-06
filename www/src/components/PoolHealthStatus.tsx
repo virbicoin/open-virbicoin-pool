@@ -124,7 +124,7 @@ const POOL_NODES: PoolNode[] = [
     {
         url: "stratum5.digitalregion.jp",
         location: "Western USA",
-        flag: "��",
+        flag: "🇺🇸",
         country: "US",
         stratumPort: 8002,
         region: "North America"
@@ -190,9 +190,34 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         };
     }
 
+    // 本番環境では実際のAPIエンドポイントをチェック
+    if (url === 'stratum4.digitalregion.jp' || url === 'stratum5.digitalregion.jp') {
+        return {
+            isHealthy: false,
+            latency: undefined,
+            lastChecked: Date.now()
+        };
+    }
+
+    // stratumサーバーを実際のpoolエンドポイントにマッピング
+    const apiEndpointMapping: { [key: string]: string } = {
+        'stratum.digitalregion.jp': 'pool.digitalregion.jp',
+        'stratum1.digitalregion.jp': 'pool1.digitalregion.jp',
+        'stratum2.digitalregion.jp': 'pool2.digitalregion.jp',
+        'stratum3.digitalregion.jp': 'pool3.digitalregion.jp'
+    };
+
+    const apiEndpoint = apiEndpointMapping[url];
+    if (!apiEndpoint) {
+        return {
+            isHealthy: false,
+            lastChecked: Date.now()
+        };
+    }
+
     try {
-        // ポート8080でAPIエンドポイントをチェック
-        const response = await fetch(`https://${url}/api/stats`, {
+        // 実際のAPIエンドポイントをチェック
+        const response = await fetch(`https://${apiEndpoint}/api/stats`, {
             method: 'GET',
             signal: AbortSignal.timeout(10000), // 10秒タイムアウト
             mode: 'cors'
@@ -201,9 +226,15 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const endTime = Date.now();
         const latency = endTime - startTime;
 
-        if (!response.ok) {
-            // HTTPエラーの場合、HTTPポートでの基本的な接続確認
-            await fetch(`https://${url}`, {
+        if (response.ok) {
+            return {
+                isHealthy: true,
+                latency,
+                lastChecked: Date.now()
+            };
+        } else {
+            // HTTPエラーの場合でも基本的な接続確認を試す
+            await fetch(`https://${apiEndpoint}`, {
                 method: 'HEAD',
                 signal: AbortSignal.timeout(5000),
                 mode: 'no-cors'
@@ -214,17 +245,11 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                 lastChecked: Date.now()
             };
         }
-
-        return {
-            isHealthy: true,
-            latency,
-            lastChecked: Date.now()
-        };
     } catch {
         try {
             // HTTPS失敗時はHTTPで再試行
             const startTime2 = Date.now();
-            const response = await fetch(`http://${url}/api/stats`, {
+            const response = await fetch(`http://${apiEndpoint}/api/stats`, {
                 method: 'GET',
                 signal: AbortSignal.timeout(5000),
                 mode: 'cors'
@@ -237,7 +262,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                 lastChecked: Date.now()
             };
         } catch (error) {
-            console.error(`Health check failed for ${url}:`, error);
+            console.error(`Health check failed for ${url} (${apiEndpoint}):`, error);
             return {
                 isHealthy: false,
                 lastChecked: Date.now()
