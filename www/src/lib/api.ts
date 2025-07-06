@@ -8,7 +8,8 @@ const getBaseUrl = () => {
   if (typeof window === 'undefined') {
     return 'https://pool.digitalregion.jp';
   }
-  return '';
+  // クライアントサイドでもHTTPSを強制
+  return 'https://pool.digitalregion.jp';
 };
 
 export interface Block {

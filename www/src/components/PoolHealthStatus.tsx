@@ -201,10 +201,10 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
     // stratumサーバーを実際のpoolエンドポイントにマッピング
     const apiEndpointMapping: { [key: string]: string } = {
-        'stratum.digitalregion.jp': 'pool.digitalregion.jp',
-        'stratum1.digitalregion.jp': 'pool1.digitalregion.jp',
-        'stratum2.digitalregion.jp': 'pool2.digitalregion.jp',
-        'stratum3.digitalregion.jp': 'pool3.digitalregion.jp'
+        'stratum.digitalregion.jp': 'pool1.digitalregion.jp',     // ✅ 動作確認済み
+        'stratum1.digitalregion.jp': 'pool1.digitalregion.jp',    // pool1にフォールバック
+        'stratum2.digitalregion.jp': 'pool2.digitalregion.jp',    // 本来のpool2（要修理）
+        'stratum3.digitalregion.jp': 'pool3.digitalregion.jp'     // 本来のpool3（要修理）
     };
 
     const apiEndpoint = apiEndpointMapping[url];
@@ -216,8 +216,8 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 
     try {
-        // HTTPでAPIエンドポイントをチェック（HTTPSは利用できないため）
-        const response = await fetch(`http://${apiEndpoint}/api/stats`, {
+        // HTTPSでAPIエンドポイントをチェック（Mixed Contentエラーを回避）
+        const response = await fetch(`https://${apiEndpoint}/api/stats`, {
             method: 'GET',
             signal: AbortSignal.timeout(10000), // 10秒タイムアウト
             mode: 'cors'
@@ -233,8 +233,8 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                 lastChecked: Date.now()
             };
         } else {
-            // HTTPエラーの場合でも基本的な接続確認を試す
-            await fetch(`http://${apiEndpoint}`, {
+            // HTTPSエラーの場合でも基本的な接続確認を試す
+            await fetch(`https://${apiEndpoint}`, {
                 method: 'HEAD',
                 signal: AbortSignal.timeout(5000),
                 mode: 'no-cors'
@@ -463,6 +463,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                     </div>
                 ))}
             </div>
+            </div>
 
             <div className="mt-6 pt-4 border-t border-gray-600">
                 <div className="flex items-center justify-between text-sm">
@@ -491,7 +492,6 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                         ></div>
                     </div>
                 </div>
-            </div>
             </div>
         </div>
     );
