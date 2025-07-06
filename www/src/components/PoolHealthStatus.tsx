@@ -201,14 +201,14 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
     // stratumサーバーを実際のpoolエンドポイントにマッピング
     const apiEndpointMapping: { [key: string]: string } = {
-        'stratum.digitalregion.jp': 'pool1.digitalregion.jp',     // ✅ 動作確認済み
-        'stratum1.digitalregion.jp': 'pool1.digitalregion.jp',    // pool1にフォールバック
-        'stratum2.digitalregion.jp': 'pool2.digitalregion.jp',    // 本来のpool2（要修理）
-        'stratum3.digitalregion.jp': 'pool3.digitalregion.jp'     // 本来のpool3（要修理）
+        'stratum.digitalregion.jp': 'pool',      // メインプール（HTTPS対応済み）
+        'stratum1.digitalregion.jp': 'pool1',    // India pool
+        'stratum2.digitalregion.jp': 'pool2',    // Japan pool
+        'stratum3.digitalregion.jp': 'pool3'     // USA pool
     };
 
-    const apiEndpoint = apiEndpointMapping[url];
-    if (!apiEndpoint) {
+    const poolId = apiEndpointMapping[url];
+    if (!poolId) {
         return {
             isHealthy: false,
             lastChecked: Date.now()
@@ -216,8 +216,8 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 
     try {
-        // HTTPSでAPIエンドポイントをチェック（Mixed Contentエラーを回避）
-        const response = await fetch(`https://${apiEndpoint}/api/stats`, {
+        // プロキシエンドポイントを使用してHTTPS経由でアクセス
+        const response = await fetch(`https://pool.digitalregion.jp/api/proxy/${poolId}/stats`, {
             method: 'GET',
             signal: AbortSignal.timeout(10000), // 10秒タイムアウト
             mode: 'cors'
@@ -227,26 +227,26 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const latency = endTime - startTime;
 
         if (response.ok) {
-            return {
-                isHealthy: true,
-                latency,
-                lastChecked: Date.now()
-            };
-        } else {
-            // HTTPSエラーの場合でも基本的な接続確認を試す
-            await fetch(`https://${apiEndpoint}`, {
-                method: 'HEAD',
-                signal: AbortSignal.timeout(5000),
-                mode: 'no-cors'
-            });
-            return {
-                isHealthy: true,
-                latency,
-                lastChecked: Date.now()
-            };
+            const data = await response.json();
+            // データが有効かチェック
+            if (data && typeof data === 'object' && !data.error) {
+                return {
+                    isHealthy: true,
+                    latency,
+                    lastChecked: Date.now()
+                };
+            }
         }
+        
+        // レスポンスエラーまたは無効なデータの場合
+        console.warn(`Health check warning for ${url} (${poolId}): ${response.status}`);
+        return {
+            isHealthy: false,
+            lastChecked: Date.now()
+        };
+        
     } catch (error) {
-        console.error(`Health check failed for ${url} (${apiEndpoint}):`, error);
+        console.error(`Health check failed for ${url} (${poolId}):`, error);
         return {
             isHealthy: false,
             lastChecked: Date.now()

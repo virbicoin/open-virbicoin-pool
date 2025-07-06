@@ -3,12 +3,7 @@ const getBaseUrl = () => {
   if (process.env.NEXT_PUBLIC_API_BASE_URL) {
     return process.env.NEXT_PUBLIC_API_BASE_URL;
   }
-  // If running on the server, use the internal API endpoint.
-  // If running on the client, use the relative path which will be proxied.
-  if (typeof window === 'undefined') {
-    return 'https://pool.digitalregion.jp';
-  }
-  // クライアントサイドでもHTTPSを強制
+  // 常にHTTPS対応のメインプールを使用
   return 'https://pool.digitalregion.jp';
 };
 
