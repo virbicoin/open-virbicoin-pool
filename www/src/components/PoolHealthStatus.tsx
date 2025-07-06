@@ -217,14 +217,21 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
     try {
         // プロキシエンドポイントを使用してHTTPS経由でアクセス
-        const response = await fetch(`https://pool.digitalregion.jp/api/proxy/${poolId}/stats`, {
+        const baseUrl = typeof window === 'undefined' ? 'https://pool.digitalregion.jp' : '';
+        const response = await fetch(`${baseUrl}/api/proxy/${poolId}/stats`, {
             method: 'GET',
-            signal: AbortSignal.timeout(10000), // 10秒タイムアウト
-            mode: 'cors'
+            signal: AbortSignal.timeout(15000), // 15秒タイムアウト
+            mode: 'cors',
+            headers: {
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
+            }
         });
 
         const endTime = Date.now();
         const latency = endTime - startTime;
+
+        console.log(`[Health] ${url} (${poolId}): ${response.status} in ${latency}ms`);
 
         if (response.ok) {
             const data = await response.json();
@@ -235,11 +242,17 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                     latency,
                     lastChecked: Date.now()
                 };
+            } else {
+                console.warn(`[Health] Invalid data for ${url}:`, data);
+                return {
+                    isHealthy: false,
+                    lastChecked: Date.now()
+                };
             }
         }
         
-        // レスポンスエラーまたは無効なデータの場合
-        console.warn(`Health check warning for ${url} (${poolId}): ${response.status}`);
+        // レスポンスエラーの場合
+        console.warn(`[Health] HTTP error for ${url} (${poolId}): ${response.status}`);
         return {
             isHealthy: false,
             lastChecked: Date.now()
