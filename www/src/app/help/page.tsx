@@ -91,6 +91,65 @@ export default function HelpPage() {
           </div>
         </div>
 
+        {/* Pool Servers Card */}
+        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-6">
+          <div className="p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-100">Pool Servers & Locations</h3>
+            <p className="text-gray-400 mb-6">
+              Choose the server closest to your location for optimal mining performance and lower latency.
+            </p>
+            
+            <div className="space-y-4 text-gray-300">
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">Global Server</h4>
+                <p className="text-gray-400 mb-2">Automatically connects to the lowest latency server</p>
+                <p><strong>Host:</strong> stratum.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">South Asia Server</h4>
+                <p><strong>Host:</strong> stratum1.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">Northeast Asia Server</h4>
+                <p><strong>Host:</strong> stratum2.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">North America Server</h4>
+                <p><strong>Host:</strong> stratum3.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">Northern Europe Server</h4>
+                <p><strong>Host:</strong> stratum4.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+
+              <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
+                <h4 className="text-lg font-semibold text-white mb-2">Western USA Server</h4>
+                <p><strong>Host:</strong> stratum5.digitalregion.jp</p>
+                <p><strong>Port:</strong> 8002, 8004, 8009</p>
+              </div>
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+              <h5 className="text-blue-400 font-semibold mb-2">💡 Connection Tips</h5>
+              <ul className="text-gray-400 text-sm space-y-1">
+                <li>• Use the server closest to your location for best performance</li>
+                <li>• All servers share the same pool and payouts</li>
+                <li>• You can switch between servers at any time</li>
+                <li>• All servers use the same wallet address and worker configuration</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         {/* Advanced Connection Details Card */}
         <div className="bg-gray-800 rounded-lg border border-gray-700">
           <div className="p-6">

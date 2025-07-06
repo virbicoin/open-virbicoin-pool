@@ -1,0 +1,419 @@
+"use client";
+
+import useSWR from "swr";
+import { ServerIcon, CheckCircleIcon, XCircleIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+
+interface PoolNode {
+    url: string;
+    location: string;
+    flag: string;
+    country: string;
+    stratumPort: number;
+    region: string;
+}
+
+interface PoolHealthData {
+    isHealthy: boolean;
+    latency?: number;
+    lastChecked?: number;
+}
+
+interface PoolHealthStatusProps {
+    className?: string;
+}
+
+// 国旗表示コンポーネント
+function FlagIcon({ flag, country, location }: { flag: string; country: string; location: string }) {
+    if (country === 'GLOBAL') {
+        return (
+            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-500/20 border-blue-400/30 border-2">
+                <GlobeAltIcon className="w-8 h-8 text-blue-400" />
+            </div>
+        );
+    }
+
+    // 確実に表示される国旗色マッピング
+    const countryColors: { [key: string]: string[] } = {
+        'IN': ['#FF9933', '#FFFFFF', '#138808'], // インド: オレンジ、白、緑
+        'JP': ['#BC002D'], // 日本: 赤
+        'US': ['#3C3B6E', '#B22234', '#B22234'], // アメリカ: 青、赤、赤
+        'SE': ['#006AA7', '#FECC00'] // スウェーデン: 青、黄
+    };
+
+    const countryNames: { [key: string]: string } = {
+        'IN': 'IND',
+        'JP': 'JPN',
+        'US': 'USA',
+        'SE': 'SWE'
+    };
+
+    const colors = countryColors[country] || ['#6B7280', '#9CA3AF']; // デフォルト色
+    const countryCode = countryNames[country] || country;
+
+    return (
+        <div className="w-12 h-12 relative group">
+            {/* メイン表示: CSS色ブロック */}
+            <div className="w-full h-full rounded-full overflow-hidden border-2 border-gray-400 shadow-lg">
+                <div className="w-full h-full flex flex-col">
+                    {colors.map((color, idx) => (
+                        <div
+                            key={idx}
+                            className="flex-1"
+                            style={{ backgroundColor: color }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* オーバーレイ: 国名コード */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-white font-bold text-xs bg-black/60 px-1.5 py-0.5 rounded backdrop-blur-sm border border-white/20">
+                    {countryCode}
+                </span>
+            </div>
+
+            {/* ツールチップ情報 */}
+            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-lg">
+                {location}
+            </div>
+        </div>
+    );
+}
+
+const POOL_NODES: PoolNode[] = [
+    {
+        url: "stratum.digitalregion.jp",
+        location: "Global",
+        flag: "🌍",
+        country: "GLOBAL",
+        stratumPort: 8002,
+        region: "Global"
+    },
+    {
+        url: "stratum1.digitalregion.jp",
+        location: "Western India",
+        flag: "🇮🇳",
+        country: "IN",
+        stratumPort: 8002,
+        region: "South Asia"
+    },
+    {
+        url: "stratum2.digitalregion.jp",
+        location: "Central Japan",
+        flag: "🇯🇵",
+        country: "JP",
+        stratumPort: 8002,
+        region: "North East Asia"
+    },
+    {
+        url: "stratum3.digitalregion.jp",
+        location: "Eastern USA",
+        flag: "🇺🇸",
+        country: "US",
+        stratumPort: 8002,
+        region: "North America"
+    },
+    {
+        url: "stratum4.digitalregion.jp",
+        location: "Central Sweden",
+        flag: "🇸🇪",
+        country: "SE",
+        stratumPort: 8002,
+        region: "North Europe"
+    },
+    {
+        url: "stratum5.digitalregion.jp",
+        location: "Western USA",
+        flag: "��",
+        country: "US",
+        stratumPort: 8002,
+        region: "North America"
+    }
+];
+
+// プールのヘルス状態をチェックする関数
+async function checkPoolHealth(url: string): Promise<PoolHealthData> {
+    const startTime = Date.now();
+
+    // 開発環境での模擬データ
+    if (process.env.NODE_ENV === 'development') {
+        // プールごとに異なる確率でオンライン状態をシミュレート
+        const healthProbability = {
+            'stratum.digitalregion.jp': 0.90,  // Global - 90%の確率でオンライン
+            'stratum1.digitalregion.jp': 0.90, // India - 90%の確率でオンライン
+            'stratum2.digitalregion.jp': 0.90, // Japan - 90%の確率でオンライン
+            'stratum3.digitalregion.jp': 0.90, // East USA - 90%の確率でオンライン
+            'stratum4.digitalregion.jp': 0.00, // Sweden - まだ稼働していないため0%
+            'stratum5.digitalregion.jp': 0.00  // Western USA - まだ稼働していないため0%
+        };
+
+        const latencyBase = {
+            'stratum.digitalregion.jp': 50,   // Global - 基本50ms
+            'stratum1.digitalregion.jp': 180, // West India - 基本180ms
+            'stratum2.digitalregion.jp': 20,  // Central Japan - 基本20ms
+            'stratum3.digitalregion.jp': 150, // East USA - 基本150ms
+            'stratum4.digitalregion.jp': 120, // Sweden - 基本120ms
+            'stratum5.digitalregion.jp': 130  // Western USA - 基本130ms
+        };
+
+        const probability = healthProbability[url as keyof typeof healthProbability] || 0.95;
+        const baseLatency = latencyBase[url as keyof typeof latencyBase] || 100;
+
+        // stratum4.digitalregion.jpとstratum5.digitalregion.jpはまだ稼働していないため、特別処理
+        if (url === 'stratum4.digitalregion.jp' || url === 'stratum5.digitalregion.jp') {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 2秒待機
+            return {
+                isHealthy: false,
+                latency: undefined,
+                lastChecked: Date.now()
+            };
+        }
+
+        // より安定したヘルス状態判定のため、時間ベースでステータスを決定
+        const now = Date.now();
+        const hourly = Math.floor(now / (1000 * 60 * 60)); // 1時間ごとに変わる値
+        const timeBasedSeed = url.charCodeAt(0) + hourly; // URLと時間を組み合わせたシード値
+
+        // 実際のネットワーク遅延をシミュレート
+        const simulatedDelay = baseLatency + Math.random() * 50;
+        await new Promise(resolve => setTimeout(resolve, simulatedDelay));
+
+        // 時間ベースの安定した判定（1時間ごとにのみ状態が変わる可能性）
+        const stableRandom = (timeBasedSeed % 100) / 100;
+        const isHealthy = stableRandom < probability;
+        const endTime = Date.now();
+
+        return {
+            isHealthy,
+            latency: isHealthy ? endTime - startTime : undefined,
+            lastChecked: Date.now()
+        };
+    }
+
+    try {
+        // ポート8080でAPIエンドポイントをチェック
+        const response = await fetch(`https://${url}/api/stats`, {
+            method: 'GET',
+            signal: AbortSignal.timeout(10000), // 10秒タイムアウト
+            mode: 'cors'
+        });
+
+        const endTime = Date.now();
+        const latency = endTime - startTime;
+
+        if (!response.ok) {
+            // HTTPエラーの場合、HTTPポートでの基本的な接続確認
+            const basicResponse = await fetch(`https://${url}`, {
+                method: 'HEAD',
+                signal: AbortSignal.timeout(5000),
+                mode: 'no-cors'
+            });
+            return {
+                isHealthy: true,
+                latency,
+                lastChecked: Date.now()
+            };
+        }
+
+        return {
+            isHealthy: true,
+            latency,
+            lastChecked: Date.now()
+        };
+    } catch (error) {
+        try {
+            // HTTPS失敗時はHTTPで再試行
+            const startTime2 = Date.now();
+            const response = await fetch(`http://${url}/api/stats`, {
+                method: 'GET',
+                signal: AbortSignal.timeout(5000),
+                mode: 'cors'
+            });
+            const endTime2 = Date.now();
+
+            return {
+                isHealthy: response.ok,
+                latency: response.ok ? endTime2 - startTime2 : undefined,
+                lastChecked: Date.now()
+            };
+        } catch (httpError) {
+            console.error(`Health check failed for ${url}:`, error);
+            return {
+                isHealthy: false,
+                lastChecked: Date.now()
+            };
+        }
+    }
+}
+
+export default function PoolHealthStatus({ className = "" }: PoolHealthStatusProps) {
+    // 各プールのヘルス状態を取得
+    const healthChecks = POOL_NODES.map(node => {
+        const { data: healthData, error } = useSWR(
+            `pool-health-${node.url}`,
+            () => checkPoolHealth(node.url),
+            {
+                refreshInterval: 120000, // 2分ごとに更新（より安定した表示）
+                revalidateOnFocus: false, // フォーカス時の再検証を無効化
+                revalidateOnReconnect: false, // 再接続時の再検証を無効化
+                errorRetryCount: 1, // エラー時のリトライ回数を減らす
+                errorRetryInterval: 60000, // エラー時のリトライ間隔を1分に
+                dedupingInterval: 60000, // 重複リクエストの防止間隔を1分に
+                fallbackData: { isHealthy: false, lastChecked: Date.now() } // デフォルトはオフライン状態
+            }
+        );
+
+        return {
+            ...node,
+            healthData: healthData || { isHealthy: false, lastChecked: Date.now() },
+            isLoading: healthData === undefined && !error
+        };
+    });
+
+    // stratum4（Coming Soon）とstratum5（Coming Soon）を除外してアクティブなプールのみカウント
+    const activeHealthChecks = healthChecks.filter(check =>
+        check.url !== 'stratum4.digitalregion.jp' && check.url !== 'stratum5.digitalregion.jp'
+    );
+    const healthyCount = activeHealthChecks.filter(check => check.healthData.isHealthy).length;
+    const totalCount = activeHealthChecks.length;
+    const healthPercentage = totalCount > 0 ? (healthyCount / totalCount) * 100 : 0;
+
+    return (
+        <div className={`bg-gray-800 rounded-lg border border-gray-700 p-6 ${className}`}>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <div className="relative">
+                        <ServerIcon className="w-8 h-8 text-green-400" />
+                        {healthyCount === totalCount && (
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        )}
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-300">Pool Health Status</h3>
+                        <p className="text-sm text-gray-400">
+                            {healthyCount}/{totalCount} pools online • {healthPercentage.toFixed(0)}% uptime
+                        </p>
+                    </div>
+                </div>
+
+                {/* 全体ステータスインジケーター */}
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${healthyCount === totalCount ? 'bg-green-400/20 text-green-400' :
+                    healthyCount > 0 ? 'bg-yellow-400/20 text-yellow-400' : 'bg-red-400/20 text-red-400'
+                    }`}>
+                    {healthyCount === totalCount ? 'Operational' :
+                        healthyCount > 0 ? 'Degraded' : 'Down'}
+                </div>
+            </div>
+
+            <div className="w-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                    {healthChecks.map((pool, index) => (
+                        <div
+                            key={pool.url}
+                            className={`w-full p-6 rounded-lg border transition-all duration-300 hover:shadow-lg min-h-[160px] ${pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp' ?
+                                'bg-gray-800/30 border-gray-600/50 opacity-60' :
+                            `bg-gray-700/50 hover:bg-gray-700/70 ${pool.healthData.isHealthy ? 'border-green-400/30 shadow-green-400/10' :
+                                pool.isLoading ? 'border-gray-600/50' : 'border-red-400/30 shadow-red-400/10'
+                            }`
+                            }`}
+                        style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                        <div className="flex items-start gap-4 h-full">
+                            {/* 国旗とステータスインジケーター */}
+                            <div className="flex-shrink-0 relative">
+                                <FlagIcon flag={pool.flag} country={pool.country} location={pool.location} />
+                                {/* ステータスバッジ */}
+                                <div className="absolute -bottom-1 -right-1">
+                                    {pool.isLoading ? (
+                                        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin bg-gray-800"></div>
+                                    ) : pool.healthData.isHealthy ? (
+                                        <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg"></div>
+                                    ) : (
+                                        <div className="w-4 h-4 bg-red-400 rounded-full shadow-lg"></div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* プール情報 */}
+                            <div className="flex-grow min-w-0 flex flex-col justify-between h-full">
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <h4 className="text-white font-semibold text-base truncate">{pool.location}</h4>
+                                        </div>
+                                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${pool.isLoading ? 'bg-gray-600/50 text-gray-300' :
+                                            pool.healthData.isHealthy ? 'bg-green-400/20 text-green-400' :
+                                                (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'bg-orange-500/20 text-orange-400' : 'bg-red-400/20 text-red-400'
+                                            }`}>
+                                            {pool.isLoading ? 'Checking' :
+                                                pool.healthData.isHealthy ? 'Online' :
+                                                    (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'Coming Soon' : 'Offline'}
+                                        </span>
+                                    </div>
+
+                                    <p className="text-sm text-gray-400 truncate mb-4">{pool.url}</p>
+                                </div>
+
+                                {/* メトリクス行 */}
+                                <div className="grid grid-cols-3 gap-3 text-sm">
+                                    <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
+                                        <span className="text-gray-400 text-xs mb-1">Latency</span>
+                                        <span className={`font-mono font-medium text-xs ${pool.healthData.latency ? 'text-white' :
+                                            (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'text-gray-500' : 'text-gray-500'
+                                            }`}>
+                                            {(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? '---' :
+                                                pool.healthData.latency ? `${pool.healthData.latency}ms` : 'N/A'}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
+                                        <span className="text-gray-400 text-xs mb-1">Port</span>
+                                        <span className={`font-medium text-xs ${(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'text-gray-500' : 'text-white'
+                                            }`}>
+                                            {(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? '---' : pool.stratumPort}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
+                                        <span className="text-gray-400 text-xs mb-1">Region</span>
+                                        <span className="text-white font-medium text-xs text-center leading-tight w-full overflow-hidden">
+                                            {pool.region}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-gray-600">
+                <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Last updated:</span>
+                    <span className="text-gray-300">
+                        {new Date().toLocaleTimeString('ja-JP', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        })}
+                    </span>
+                </div>
+
+                {/* ヘルス状態バー */}
+                <div className="mt-3">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Global Health</span>
+                        <span>{healthPercentage.toFixed(0)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div
+                            className={`h-2 rounded-full transition-all duration-500 ${healthPercentage === 100 ? 'bg-green-400' :
+                                healthPercentage >= 66 ? 'bg-yellow-400' : 'bg-red-400'
+                                }`}
+                            style={{ width: `${healthPercentage}%` }}
+                        ></div>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    );
+}

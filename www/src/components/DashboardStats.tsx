@@ -3,6 +3,7 @@
 import useSWR from "swr";
 import { formatHashrate } from "@/lib/formatters";
 import TimeAgo from "@/components/TimeAgo";
+import PoolHealthStatus from "@/components/PoolHealthStatus";
 import {
   UserGroupIcon,
   CpuChipIcon,
@@ -71,7 +72,12 @@ export default function DashboardStats({ stats: initialStats }: DashboardStatsPr
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+    <div>
+      <div className="mb-8">
+        <PoolHealthStatus />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 flex items-center gap-4 min-h-[140px] h-full">
         <UserGroupIcon className="w-8 h-8 text-blue-400" />
         <div>
@@ -168,9 +174,9 @@ export default function DashboardStats({ stats: initialStats }: DashboardStatsPr
         <div>
           <h3 className="text-lg font-semibold text-gray-300 mb-1">Payment Method</h3>
           <p className="text-2xl font-bold text-blue-500">PROP</p>
-          <span className="text-sm text-gray-400 block mt-1">Stable and profitable pool with regular payouts</span>
-        </div>
+          <span className="text-sm text-gray-400 block mt-1">Stable and profitable pool with regular payouts</span>        </div>
       </div>
+    </div>
     </div>
   )
 }
