@@ -32,13 +32,13 @@ type PayoutsConfig struct {
 	BgSave    bool  `json:"bgsave"`
 }
 
-func (self PayoutsConfig) GasHex() string {
-	x := util.String2Big(self.Gas)
+func (p *PayoutsConfig) GasHex() string {
+	x := util.String2Big(p.Gas)
 	return hexutil.EncodeBig(x)
 }
 
-func (self PayoutsConfig) GasPriceHex() string {
-	x := util.String2Big(self.GasPrice)
+func (p *PayoutsConfig) GasPriceHex() string {
+	x := util.String2Big(p.GasPrice)
 	return hexutil.EncodeBig(x)
 }
 
@@ -89,15 +89,11 @@ func (u *PayoutsProcessor) Start() {
 
 	// Immediately process payouts after start
 	u.process()
-	timer.Reset(intv)
 
 	go func() {
-		for {
-			select {
-			case <-timer.C:
-				u.process()
-				timer.Reset(intv)
-			}
+		for range timer.C {
+			u.process()
+			timer.Reset(intv)
 		}
 	}()
 }
@@ -145,7 +141,7 @@ func (u *PayoutsProcessor) process() {
 			break
 		}
 		if poolBalance.Cmp(amountInWei) < 0 {
-			err := fmt.Errorf("Not enough balance for payment, need %s Wei, pool has %s Wei",
+			err := fmt.Errorf("not enough balance for payment, need %s Wei, pool has %s Wei",
 				amountInWei.String(), poolBalance.String())
 			u.halt = true
 			u.lastFail = err
@@ -227,8 +223,8 @@ func (u *PayoutsProcessor) process() {
 	}
 }
 
-func (self PayoutsProcessor) isUnlockedAccount() bool {
-	_, err := self.rpc.Sign(self.config.Address, "0x0")
+func (p *PayoutsProcessor) isUnlockedAccount() bool {
+	_, err := p.rpc.Sign(p.config.Address, "0x0")
 	if err != nil {
 		log.Println("Unable to process payouts:", err)
 		return false
@@ -236,21 +232,21 @@ func (self PayoutsProcessor) isUnlockedAccount() bool {
 	return true
 }
 
-func (self PayoutsProcessor) checkPeers() bool {
-	n, err := self.rpc.GetPeerCount()
+func (p *PayoutsProcessor) checkPeers() bool {
+	n, err := p.rpc.GetPeerCount()
 	if err != nil {
 		log.Println("Unable to start payouts, failed to retrieve number of peers from node:", err)
 		return false
 	}
-	if n < self.config.RequirePeers {
-		log.Println("Unable to start payouts, number of peers on a node is less than required", self.config.RequirePeers)
+	if n < p.config.RequirePeers {
+		log.Println("Unable to start payouts, number of peers on a node is less than required", p.config.RequirePeers)
 		return false
 	}
 	return true
 }
 
-func (self PayoutsProcessor) reachedThreshold(amount *big.Int) bool {
-	return big.NewInt(self.config.Threshold).Cmp(amount) < 0
+func (p *PayoutsProcessor) reachedThreshold(amount *big.Int) bool {
+	return big.NewInt(p.config.Threshold).Cmp(amount) < 0
 }
 
 func formatPendingPayments(list []*storage.PendingPayment) string {
@@ -261,8 +257,8 @@ func formatPendingPayments(list []*storage.PendingPayment) string {
 	return s
 }
 
-func (self PayoutsProcessor) bgSave() {
-	result, err := self.backend.BgSave()
+func (p *PayoutsProcessor) bgSave() {
+	result, err := p.backend.BgSave()
 	if err != nil {
 		log.Println("Failed to perform BGSAVE on backend:", err)
 		return
@@ -270,21 +266,21 @@ func (self PayoutsProcessor) bgSave() {
 	log.Println("Saving backend state to disk:", result)
 }
 
-func (self PayoutsProcessor) resolvePayouts() {
-	payments := self.backend.GetPendingPayments()
+func (p *PayoutsProcessor) resolvePayouts() {
+	payments := p.backend.GetPendingPayments()
 
 	if len(payments) > 0 {
 		log.Printf("Will credit back following balances:\n%s", formatPendingPayments(payments))
 
 		for _, v := range payments {
-			err := self.backend.RollbackBalance(v.Address, v.Amount)
+			err := p.backend.RollbackBalance(v.Address, v.Amount)
 			if err != nil {
 				log.Printf("Failed to credit %v Shannon back to %s, error is: %v", v.Amount, v.Address, err)
 				return
 			}
 			log.Printf("Credited %v Shannon back to %s", v.Amount, v.Address)
 		}
-		err := self.backend.UnlockPayouts()
+		err := p.backend.UnlockPayouts()
 		if err != nil {
 			log.Println("Failed to unlock payouts:", err)
 			return
@@ -293,13 +289,13 @@ func (self PayoutsProcessor) resolvePayouts() {
 		log.Println("No pending payments to resolve")
 	}
 
-	if self.config.BgSave {
-		self.bgSave()
+	if p.config.BgSave {
+		p.bgSave()
 	}
 	log.Println("Payouts unlocked")
 }
 
-func (self PayoutsProcessor) mustResolvePayout() bool {
+func (p *PayoutsProcessor) mustResolvePayout() bool {
 	v, _ := strconv.ParseBool(os.Getenv("RESOLVE_PAYOUT"))
 	return v
 }

@@ -66,22 +66,17 @@ func NewBlockUnlocker(cfg *UnlockerConfig, backend *storage.RedisClient) *BlockU
 func (u *BlockUnlocker) Start() {
 	log.Println("Starting block unlocker")
 	intv := util.MustParseDuration(u.config.Interval)
-	timer := time.NewTimer(intv)
+	ticker := time.NewTicker(intv)
 	log.Printf("Set block unlock interval to %v", intv)
 
 	// Immediately unlock after start
 	u.unlockPendingBlocks()
 	u.unlockAndCreditMiners()
-	timer.Reset(intv)
 
 	go func() {
-		for {
-			select {
-			case <-timer.C:
-				u.unlockPendingBlocks()
-				u.unlockAndCreditMiners()
-				timer.Reset(intv)
-			}
+		for range ticker.C {
+			u.unlockPendingBlocks()
+			u.unlockAndCreditMiners()
 		}
 	}()
 }
@@ -124,7 +119,7 @@ func (u *BlockUnlocker) unlockCandidates(candidates []*storage.BlockData) (*Unlo
 				return nil, err
 			}
 			if block == nil {
-				return nil, fmt.Errorf("Error while retrieving block %v from node, wrong node height", height)
+				return nil, fmt.Errorf("error while retrieving block %v from node, wrong node height", height)
 			}
 
 			if matchCandidate(block, candidate) {
@@ -150,10 +145,10 @@ func (u *BlockUnlocker) unlockCandidates(candidates []*storage.BlockData) (*Unlo
 			for uncleIndex, uncleHash := range block.Uncles {
 				uncle, err := u.rpc.GetUncleByBlockNumberAndIndex(height, uncleIndex)
 				if err != nil {
-					return nil, fmt.Errorf("Error while retrieving uncle of block %v from node: %v", uncleHash, err)
+					return nil, fmt.Errorf("error while retrieving uncle of block %v from node: %v", uncleHash, err)
 				}
 				if uncle == nil {
-					return nil, fmt.Errorf("Error while retrieving uncle of block %v from node", height)
+					return nil, fmt.Errorf("error while retrieving uncle of block %v from node", height)
 				}
 
 				// Found uncle
@@ -216,7 +211,7 @@ func (u *BlockUnlocker) handleBlock(block *rpc.GetBlockReply, candidate *storage
 	// Add TX fees
 	extraTxReward, err := u.getExtraRewardForTx(block)
 	if err != nil {
-		return fmt.Errorf("Error while fetching TX receipt: %v", err)
+		return fmt.Errorf("error while fetching TX receipt: %v", err)
 	}
 	if u.config.KeepTxFees {
 		candidate.ExtraReward = extraTxReward

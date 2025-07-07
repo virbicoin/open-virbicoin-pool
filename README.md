@@ -1,8 +1,11 @@
 ## Open Source VirBiCoin Mining Pool
 
 ![Miner's stats page](https://github.com/user-attachments/assets/4c88b87f-a9da-4dde-9efc-8e95a16f697b)
-
-[![Join the chat at https://matrix.to/#/#open-virbicoin-pool:gitter.im](https://badges.gitter.im/Join%20Chat.svg)](https://matrix.to/#/#open-virbicoin-pool:gitter.im?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![GitHub CI](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml/badge.svg)](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
+[![Reference](
+https://camo.githubusercontent.com/2063f3f9554951409bbfe24df02fdb42654b032b1f13062829c198b58f836335/68747470733a2f2f706b672e676f2e6465762f62616467652f6769746875622e636f6d2f657468657265756d2f676f2d657468657265756d
+)](https://pkg.go.dev/github.com/virbicoin/open-virbicoin-pool)
+[![GitHub CI](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml/badge.svg)](https://github.com/virbicoin/open-virbicoin-pool/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/virbicoin/open-virbicoin-pool)](https://goreportcard.com/report/github.com/virbicoin/open-virbicoin-pool)
 
 ### Features
 
@@ -32,15 +35,14 @@ Dependencies:
 
 **I highly recommend to use Ubuntu 16.04 LTS or higher.**
 
-First install  [go-virbicoin](https://github.com/virbicoin/go-virbicoin/wiki/Installation-Instructions-for-Ubuntu).
+First install  [go-virbicoin](https://github.com/virbicoin/go-virbicoin/wiki/Installing-Gvbc).
 
 Clone & compile:
 
     git config --global http.https://gopkg.in.followRedirects true
     git clone https://github.com/virbicoin/open-virbicoin-pool.git
     cd open-virbicoin-pool
-    make
-    go build -o build/bin/ ./...
+    go build
 
 Install redis-server.
 
@@ -85,7 +87,7 @@ and add this setting after <code>location /</code>:
 
 You can customize the layout using built-in web server with live reload:
 
-    ember server --port 8082 --environment development
+    npm run dev
 
 **Don't use built-in web server in production**.
 
