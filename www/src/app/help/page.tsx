@@ -44,13 +44,19 @@ export default function HelpPage() {
             </div>
             <h4 className="text-lg font-semibold mb-2 text-gray-100">Mining software</h4>
             <p className="text-gray-400 mb-4">
-              For Nvidia GPUs we recommend T-Rex and for AMD GPUs we recommend
-              TeamRedMiner.
+              {/* For Nvidia GPUs, we recommend T-Rex and Claymore. For AMD GPUs, we recommend TeamRedMiner. */}
+              For <strong>Nvidia GPUs</strong>, we recommend <strong>T-Rex</strong> and <strong>Claymore</strong>. For <strong>AMD GPUs</strong>, we recommend <strong>TeamRedMiner</strong>.
             </p>
             <pre className="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-700 text-gray-300 overflow-x-auto">
               <code>
                 t-rex -a ethash -o stratum+tcp://stratum.digitalregion.jp:8002 -u
                 YOUR_ADDRESS -w WORKER_NAME
+              </code>
+            </pre>
+            {/* Claymore sample config for NVIDIA GPUs */}
+            <pre className="bg-gray-900 rounded-lg p-4 mb-4 border border-gray-700 text-gray-300 overflow-x-auto">
+              <code>
+                EthDcrMiner64 -epool stratum+tcp://stratum.digitalregion.jp:8002 -ewal YOUR_ADDRESS -eworker WORKER_NAME -epsw x -allcoins -1
               </code>
             </pre>
             <pre className="bg-gray-900 rounded-lg p-4 border border-gray-700 text-gray-300 overflow-x-auto">
@@ -163,15 +169,15 @@ export default function HelpPage() {
               <dl className="flex flex-col gap-2">
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8002:</dt>
-                  <dd className="text-gray-400">Difficulty 2G (Default)</dd>
+                  <dd className="text-gray-400">Difficulty 2G (Low-End)</dd>
                 </div>
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8004:</dt>
-                  <dd className="text-gray-400">Difficulty 4G</dd>
+                  <dd className="text-gray-400">Difficulty 44G (High-End)</dd>
                 </div>
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8009:</dt>
-                  <dd className="text-gray-400">Difficulty 9G</dd>
+                  <dd className="text-gray-400">Difficulty 999G (NiceHash)</dd>
                 </div>
               </dl>
             </div>
