@@ -114,31 +114,31 @@ export default function HelpPage() {
               </div>
 
               <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
-                <h4 className="text-lg font-semibold text-white mb-2">South Asia Server</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">South Asia Server (India)</h4>
                 <p><strong>Host:</strong> stratum1.digitalregion.jp</p>
                 <p><strong>Port:</strong> 8002, 8004, 8009</p>
               </div>
 
               <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
-                <h4 className="text-lg font-semibold text-white mb-2">Northeast Asia Server</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">Northeast Asia Server (Japan)</h4>
                 <p><strong>Host:</strong> stratum2.digitalregion.jp</p>
                 <p><strong>Port:</strong> 8002, 8004, 8009</p>
               </div>
 
               <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
-                <h4 className="text-lg font-semibold text-white mb-2">North America Server</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">North East America Server (East USA)</h4>
                 <p><strong>Host:</strong> stratum3.digitalregion.jp</p>
                 <p><strong>Port:</strong> 8002, 8004, 8009</p>
               </div>
 
               <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
-                <h4 className="text-lg font-semibold text-white mb-2">Northern Europe Server</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">Northern Europe Server (Sweden)</h4>
                 <p><strong>Host:</strong> stratum4.digitalregion.jp</p>
                 <p><strong>Port:</strong> 8002, 8004, 8009</p>
               </div>
 
               <div className="bg-gray-900/60 p-4 rounded-lg border border-gray-700/50">
-                <h4 className="text-lg font-semibold text-white mb-2">Western USA Server</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">North West America Server (West USA)</h4>
                 <p><strong>Host:</strong> stratum5.digitalregion.jp</p>
                 <p><strong>Port:</strong> 8002, 8004, 8009</p>
               </div>
@@ -169,15 +169,15 @@ export default function HelpPage() {
               <dl className="flex flex-col gap-2">
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8002:</dt>
-                  <dd className="text-gray-400">Difficulty 2G (Low-End)</dd>
+                  <dd className="text-gray-400">Difficulty 2GH (Low-End)</dd>
                 </div>
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8004:</dt>
-                  <dd className="text-gray-400">Difficulty 44G (High-End)</dd>
+                  <dd className="text-gray-400">Difficulty 44GH (High-End)</dd>
                 </div>
                 <div>
                   <dt className="text-gray-300 font-medium">Port 8009:</dt>
-                  <dd className="text-gray-400">Difficulty 999G (NiceHash)</dd>
+                  <dd className="text-gray-400">Difficulty 999GH (NiceHash)</dd>
                 </div>
               </dl>
             </div>
@@ -189,7 +189,7 @@ export default function HelpPage() {
                 <div>
                   <dt className="text-gray-300 font-medium">Algorithm:</dt>
                   <dd className="text-gray-400">
-                    <code className="text-gray-300">Ethash</code>
+                    <code className="text-gray-300">Ethash (DaggerHashimoto)</code>
                   </dd>
                 </div>
                 <div>
