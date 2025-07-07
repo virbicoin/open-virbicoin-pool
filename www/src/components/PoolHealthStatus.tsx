@@ -185,16 +185,8 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         });
 
         const endTime = Date.now();
-        // X-Proxy-Duration ヘッダーがあればそれを遅延として優先
-        const proxyDuration = response.headers.get('X-Proxy-Duration');
-        let latency: number;
-        if (proxyDuration) {
-            const pd = parseFloat(proxyDuration);
-            // ヘッダー値が小さい場合は秒単位、そうでなければそのまま ms
-            latency = pd > 100 ? pd : pd * 1000;
-        } else {
-            latency = endTime - startTime;
-        }
+        // ブラウザ〜プロキシ間のラウンドトリップを計測
+        const latency = endTime - startTime;
 
         console.log(`[Health] ${url} (${fetchPath}): ${response.status} in ${latency}ms`);
 
