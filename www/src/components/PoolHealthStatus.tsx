@@ -23,7 +23,7 @@ interface PoolHealthStatusProps {
 }
 
 // 国旗表示コンポーネント
-function FlagIcon({ country, location }: { country: string; location: string }) {
+function FlagIcon({ country }: { country: string }) {
     if (country === 'GLOBAL') {
         return (
             <div className="w-12 h-12 flex items-center justify-center rounded-full bg-blue-500/20 border-blue-400/30 border-2">
@@ -32,50 +32,15 @@ function FlagIcon({ country, location }: { country: string; location: string }) 
         );
     }
 
-    // 確実に表示される国旗色マッピング
-    const countryColors: { [key: string]: string[] } = {
-        'IN': ['#FF9933', '#FFFFFF', '#138808'], // インド: オレンジ、白、緑
-        'JP': ['#BC002D'], // 日本: 赤
-        'US': ['#3C3B6E', '#B22234', '#B22234'], // アメリカ: 青、赤、赤
-        'SE': ['#006AA7', '#FECC00'] // スウェーデン: 青、黄
-    };
-
-    const countryNames: { [key: string]: string } = {
-        'IN': 'IND',
-        'JP': 'JPN',
-        'US': 'USA',
-        'SE': 'SWE'
-    };
-
-    const colors = countryColors[country] || ['#6B7280', '#9CA3AF']; // デフォルト色
-    const countryCode = countryNames[country] || country;
-
+    // CDN国旗画像のみ表示
+    const iso = country.toLowerCase();
     return (
-        <div className="w-12 h-12 relative group">
-            {/* メイン表示: CSS色ブロック */}
-            <div className="w-full h-full rounded-full overflow-hidden border-2 border-gray-400 shadow-lg">
-                <div className="w-full h-full flex flex-col">
-                    {colors.map((color, idx) => (
-                        <div
-                            key={idx}
-                            className="flex-1"
-                            style={{ backgroundColor: color }}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            {/* オーバーレイ: 国名コード */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-white font-bold text-xs bg-black/60 px-1.5 py-0.5 rounded backdrop-blur-sm border border-white/20">
-                    {countryCode}
-                </span>
-            </div>
-
-            {/* ツールチップ情報 */}
-            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 shadow-lg">
-                {location}
-            </div>
+        <div className="w-12 h-12 rounded-full overflow-hidden">
+            <img
+                src={`https://flagcdn.com/w80/${iso}.png`}
+                alt={country}
+                className="w-full h-full object-cover"
+            />
         </div>
     );
 }
@@ -413,7 +378,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                         <div className="flex items-start gap-4 h-full">
                             {/* 国旗とステータスインジケーター */}
                             <div className="flex-shrink-0 relative">
-                                <FlagIcon country={pool.country} location={pool.location} />
+                                <FlagIcon country={pool.country} />
                                 {/* ステータスバッジ */}
                                 <div className="absolute -bottom-1 -right-1">
                                     {pool.isLoading ? (
