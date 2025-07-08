@@ -15,6 +15,8 @@ export async function GET(
   context: { params: Promise<{ slug: string[] }> }
 ) {
   const startTime = Date.now();
+  let poolId = '';
+  let apiPath = '';
 
   try {
     const params = await context.params;
@@ -27,8 +29,8 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid proxy path' }, { status: 400 });
     }
 
-    const poolId = slug[0]; // pool1, pool2, pool3, etc.
-    const apiPath = slug.slice(1).join('/'); // stats, blocks, etc.
+    poolId = slug[0]; // pool1, pool2, pool3, etc.
+    apiPath = slug.slice(1).join('/'); // stats, blocks, etc.
 
     const baseUrl = POOL_ENDPOINTS[poolId as keyof typeof POOL_ENDPOINTS];
 
@@ -47,8 +49,8 @@ export async function GET(
         'Accept': 'application/json',
         'User-Agent': 'Virbicoin-Pool-Frontend/1.0'
       },
-      // タイムアウトを設定
-      signal: AbortSignal.timeout(15000) // 15秒に延長
+      // Route53のレイテンシベースルーティングにより、ユーザーから最も近いサーバーに接続されるため、統一タイムアウト
+      signal: AbortSignal.timeout(10000) // 10秒
     });
 
     const endTime = Date.now();
@@ -58,44 +60,6 @@ export async function GET(
 
     if (!response.ok) {
       console.error(`[Proxy] Upstream error: ${proxyUrl} - ${response.status} ${response.statusText}`);
-
-      // 特定のエラーに対してフォールバック
-      if (response.status === 502 || response.status === 503 || response.status === 504) {
-        // インフラエラーの場合、pool1にフォールバック（pool2, pool3のみ）
-        if (poolId === 'pool2' || poolId === 'pool3') {
-          console.log(`[Proxy] Fallback to pool1 for ${poolId}`);
-          const fallbackUrl = `${POOL_ENDPOINTS.pool1}/api/${apiPath}`;
-
-          try {
-            const fallbackResponse = await fetch(fallbackUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'Virbicoin-Pool-Frontend/1.0'
-              },
-              signal: AbortSignal.timeout(10000)
-            });
-
-            if (fallbackResponse.ok) {
-              const data = await fallbackResponse.json();
-              console.log(`[Proxy] Fallback success for ${poolId}`);
-
-              return NextResponse.json(data, {
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Access-Control-Allow-Origin': '*',
-                  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-                  'Access-Control-Allow-Headers': 'Content-Type',
-                  'X-Proxy-Fallback': 'pool1'
-                }
-              });
-            }
-          } catch (fallbackError) {
-            console.error(`[Proxy] Fallback failed for ${poolId}:`, fallbackError);
-          }
-        }
-      }
-
       return NextResponse.json(
         { error: `Upstream server error: ${response.status}` },
         { status: response.status }
@@ -120,6 +84,7 @@ export async function GET(
     const duration = Date.now() - startTime;
     console.error(`[Proxy] Error after ${duration}ms:`, error);
 
+    // 実際のエラー状況を正確に返す（フォールバックなし）
     if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
     }

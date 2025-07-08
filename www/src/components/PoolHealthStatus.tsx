@@ -121,29 +121,11 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const healthProbability: Record<string, number> = {};
         const latencyBase: Record<string, number> = {};
         
-        // アクティブプールは90%確率でオンライン
+        // アクティブプールは95%確率でオンライン（Route53により最適化済み）
         ACTIVE_POOL_NODES.forEach(pool => {
-            healthProbability[pool.url] = 0.90;
-            // 地域別の基本レイテンシを設定
-            switch (pool.region) {
-                case 'Global':
-                    latencyBase[pool.url] = 10;
-                    break;
-                case 'South Asia':
-                    latencyBase[pool.url] = 120;
-                    break;
-                case 'North East Asia':
-                    latencyBase[pool.url] = 20;
-                    break;
-                case 'North America':
-                    latencyBase[pool.url] = 150;
-                    break;
-                case 'North Europe':
-                    latencyBase[pool.url] = 280;
-                    break;
-                default:
-                    latencyBase[pool.url] = 100;
-            }
+            healthProbability[pool.url] = 0.95;
+            // Route53により最適化されるため、統一された低遅延範囲  
+            latencyBase[pool.url] = 50 + Math.random() * 100; // 50-150ms
         });
         
         // 非アクティブプールは0%確率
@@ -155,10 +137,10 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const probability = healthProbability[url as keyof typeof healthProbability] || 0.95;
         const baseLatency = latencyBase[url as keyof typeof latencyBase] || 100;
 
-        // 非アクティブプールは特別処理
+        // 非アクティブプールは特別処理 - 正確な状態を表示
         const isInactivePool = INACTIVE_POOL_NODES.some(node => node.url === url);
         if (isInactivePool) {
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 2秒待機
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒待機
             return {
                 isHealthy: false,
                 latency: undefined,
@@ -207,17 +189,15 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 
     try {
-        // 決定したURLへリクエスト
+        // 決定したURLへリクエスト - Route53により最適なサーバーに自動ルーティング
         const response = await fetch(fetchUrl, {
             method: 'GET',
-            signal: AbortSignal.timeout(15000), // 15秒タイムアウト
-            // CORSの問題を回避するためヘッダーを最小限に
+            signal: AbortSignal.timeout(10000), // 統一タイムアウト10秒
             mode: 'cors',
             credentials: 'omit'
         });
 
         const endTime = Date.now();
-        // ブラウザ〜プロキシ間のラウンドトリップを計測
         const latency = endTime - startTime;
 
         if (response.ok) {
@@ -237,13 +217,14 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
             }
         }
         
-        // レスポンスエラーの場合
+        // レスポンスエラーの場合 - 実際のエラー状態を返す
         return {
             isHealthy: false,
             lastChecked: Date.now()
         };
         
     } catch {
+        // 接続エラーの場合 - 実際のエラー状態を返す
         return {
             isHealthy: false,
             lastChecked: Date.now()
