@@ -432,7 +432,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                                 pool.healthData.latency ? `${pool.healthData.latency}ms` : 'N/A'}
                                         </span>
                                     </div>
-                                    <div className="col-span-2 flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
+                                    <div className="col-span-2 w-full flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
                                         <span className="text-gray-400 text-xs mb-1">Stratum Ports</span>
                                         <div className="flex justify-center gap-1">
                                             {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? (
