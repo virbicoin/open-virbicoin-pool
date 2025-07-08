@@ -111,17 +111,12 @@ const POOL_NODES: PoolNode[] = [...ACTIVE_POOL_NODES, ...INACTIVE_POOL_NODES];
 async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     const startTime = Date.now();
     
-    // ローカル環境（開発・本番問わず）では模擬データを使用
-    const isLocalhost = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-    const isDevelopment = process.env.NODE_ENV === 'development' || isLocalhost;
+    // NODE_ENVが'development'の場合のみ模擬データを使用
+    // localhostでもproductionビルドなら実際のAPIを使用
+    const isDevelopment = process.env.NODE_ENV === 'development';
 
-    console.log(`[HealthCheck] Starting health check for ${url}, NODE_ENV: ${process.env.NODE_ENV}, isLocalhost: ${isLocalhost}, isDevelopment: ${isDevelopment}`);
-
-    // 開発環境またはローカル環境での模擬データ（ブラウザ側でのチェック）
+    // 開発環境での模擬データ（ブラウザ側でのチェック）
     if (isDevelopment) {
-        console.log(`[Dev Mode] Using simulated health check for ${url}`);
-        
         // プール設定から動的に生成
         const healthProbability: Record<string, number> = {};
         const latencyBase: Record<string, number> = {};
@@ -192,8 +187,6 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         };
     }
 
-    // 本番環境：Next.jsのAPIプロキシを使用
-    console.log(`[Production Mode] Using API proxy for ${url}`);
     
     // リクエストパス決定: 常にNext.jsのAPIプロキシを使用
     let fetchUrl: string | undefined;
@@ -209,7 +202,6 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         }
     }
     
-    console.log(`[Production] Fetch URL: ${fetchUrl} for pool: ${url}`);
     if (!fetchUrl) {
         return { isHealthy: false, lastChecked: Date.now() };
     }
@@ -228,8 +220,6 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         // ブラウザ〜プロキシ間のラウンドトリップを計測
         const latency = endTime - startTime;
 
-        console.log(`[Health] ${url} (${fetchUrl}): ${response.status} in ${latency}ms`);
-
         if (response.ok) {
             const data = await response.json();
             // データが有効かチェック
@@ -240,7 +230,6 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                     lastChecked: Date.now()
                 };
             } else {
-                console.warn(`[Health] Invalid data for ${url}:`, data);
                 return {
                     isHealthy: false,
                     lastChecked: Date.now()
@@ -249,14 +238,12 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         }
         
         // レスポンスエラーの場合
-        console.warn(`[Health] HTTP error for ${url} (${fetchUrl}): ${response.status}`);
         return {
             isHealthy: false,
             lastChecked: Date.now()
         };
         
-    } catch (error) {
-        console.error(`Health check failed for ${url} (${fetchUrl}):`, error);
+    } catch {
         return {
             isHealthy: false,
             lastChecked: Date.now()

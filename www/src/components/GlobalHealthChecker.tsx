@@ -22,8 +22,8 @@ const GlobalHealthChecker: React.FC = () => {
         
         const res = await fetch('/health');
         const data = await res.json();
-        console.log('Health:', data.status);
-        console.log('Hostname:', data.hostname);
+        console.log('[Helth Check] Health:', data.status);
+        console.log('[Helth Check] Hostname:', data.hostname);
         // 日時をブラウザロケール・タイムゾーンで表示
         const healthTime = new Date(data.time);
         const formattedHealthTime = new Intl.DateTimeFormat(locale, {
@@ -31,9 +31,9 @@ const GlobalHealthChecker: React.FC = () => {
           timeStyle: 'long',
           timeZone,
         }).format(healthTime);
-        console.log('Time:', formattedHealthTime);
+        console.log('[Helth Check] Time:', formattedHealthTime);
       } catch (error) {
-        console.error('Health check failed:', error);
+        console.error('[Helth Check] failed:', error);
       }
     };
     

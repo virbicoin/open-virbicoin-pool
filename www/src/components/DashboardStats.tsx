@@ -34,11 +34,6 @@ interface DashboardStatsProps {
   stats: Stats
 }
 
-function calcNetworkHashrate(difficulty: number, blockTime: number = 10) {
-  if (!difficulty || !blockTime) return 0;
-  return difficulty / blockTime;
-}
-
 // ローディング状態のスケルトンコンポーネント
 function DashboardStatsLoading() {
   return (
@@ -64,34 +59,32 @@ function DashboardStatsLoading() {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
-  // ローカル環境（開発・本番問わず）では模擬データを使用
-  const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const isDevelopment = process.env.NODE_ENV === 'development' || isLocalhost;
+  // NODE_ENVが'development'の場合のみ模擬データを使用
+  // localhostでもproductionビルドなら実際のAPIを使用
+  const isDevelopment = process.env.NODE_ENV === 'development';
   
   // 開発環境用の模擬データを定義
   const mockData = {
     time: Date.now(),
-    hashrate: 8.93e12, // 8.93 GH/s
-    networkHashrate: 19.19e12, // 19.19 TH/s
-    minersTotal: 810, // 810人に固定
+    hashrate: 8.93e9,
+    networkHashrate: 1.919e10,
+    minersTotal: 810,
     nodes: [{
-      difficulty: '191900000000000', // 参考値（使用しない）
-      height: '114514' // 参考値（使用しない）
+      difficulty: 1.919e10,
+      height: '114514'
     }],
     stats: {
-      lastBlockFound: Math.floor((Date.now() - 1200000) / 1000), // 20分前のUnixタイムスタンプ（秒）
-      roundShares: 1.8e8,
-      networkHashrate: 19.19e12, // 19.19 TH/s
-      networkDifficulty: 3.64364e12, // 3.64364 TH (3643.64 GH)
-      height: 114514, // 114514に固定
+      lastBlockFound: Math.floor((Date.now() - 12000) / 1000), // 12秒前のUnixタイムスタンプ（秒）
+      roundShares: 1.8e10,
+      networkHashrate: 1.919e10,
+      networkDifficulty: 3.64364e12, 
+      height: 114514,
       roundVariance: 85.2
     }
   };
   
   const fetcher = (url: string) => {
     if (isDevelopment) {
-      console.log('[Dev/Local Mode] Using simulated stats data');
       // 開発環境またはローカル環境では模擬データを返す
       return Promise.resolve(mockData);
     }
@@ -118,57 +111,30 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
   const { data, isLoading, error } = swr;
 
   // データが読み込み中、またはエラーがある場合
-  if (isLoading || error || !data) {
+  if (isLoading || error) {
     return <DashboardStatsLoading />;
   }
 
-  // 本番環境では常にstatsオブジェクトから正しい値を取得
-  const networkDifficulty = isDevelopment ? 
-    (data?.stats?.networkDifficulty || 0) :  // 開発環境: 模擬データのstats.networkDifficultyを使用
-    (data?.stats?.networkDifficulty || 0);   // 本番環境: 必ずstats.networkDifficultyを使用
-    
-  const networkHashrate = isDevelopment ? 
-    calcNetworkHashrate(networkDifficulty, 10) :  // 開発環境: 計算値
-    (data?.stats?.networkHashrate || 0);          // 本番環境: stats.networkHashrateの値をそのまま使用
-    
-  const blockHeight = isDevelopment ? 
-    (data?.stats?.height || 0) :                  // 開発環境: 模擬データ
-    (data?.stats?.height || 0);                   // 本番環境: stats.heightを使用
-
-  // データの妥当性チェック - 開発環境では常に有効とみなす
-  const isDataValid = isDevelopment || (
-    data?.stats && 
-    typeof data.stats.networkHashrate === 'number' && 
-    typeof data.stats.networkDifficulty === 'number' && 
-    typeof data.stats.height === 'number' &&
-    data.stats.networkHashrate > 0 && 
-    data.stats.networkDifficulty > 0
-  );
-  
-  if (!isDataValid && !isDevelopment) {
+  // データが存在しない場合
+  if (!data) {
     return <DashboardStatsLoading />;
   }
 
-  let roundVariance = data?.stats?.roundVariance;
-  if (roundVariance === undefined || roundVariance === 0) {
-    const roundShares = data?.stats?.roundShares;
-    if (roundShares && networkDifficulty) {
-      roundVariance = (roundShares / networkDifficulty) * 100;
-    } else {
-      roundVariance = 0;
-    }
+  // 本番環境でのデータ妥当性チェック
+  if (!isDevelopment && (!data.stats || typeof data.hashrate !== 'number')) {
+    return <DashboardStatsLoading />;
   }
 
+  // 統計データを安全に取得
   const stats = {
     hashrate: data?.hashrate || 0,
     miners: data?.minersTotal || 0,
     workers: data?.minersTotal || 0,
     lastBlockFound: data?.stats?.lastBlockFound || 0,
-    // 開発環境では模擬データを、本番環境では必ずstatsオブジェクトの値を使用
-    networkHashrate: isDevelopment ? networkHashrate : (data?.stats?.networkHashrate || 0),
-    networkDifficulty: isDevelopment ? networkDifficulty : (data?.stats?.networkDifficulty || 0),
-    blockHeight: isDevelopment ? blockHeight : (data?.stats?.height || 0),
-    roundVariance: isDevelopment ? roundVariance : (data?.stats?.roundVariance || 0),
+    networkHashrate: data?.stats?.networkHashrate || 0,
+    networkDifficulty: data?.stats?.networkDifficulty || 0,
+    blockHeight: data?.stats?.height || 0,
+    roundVariance: data?.stats?.roundVariance || 0,
   };
 
   return (
