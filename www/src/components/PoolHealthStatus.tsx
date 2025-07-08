@@ -1,6 +1,7 @@
 "use client";
 
 import useSWR from "swr";
+import Image from "next/image";
 import { ServerIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 
 interface PoolNode {
@@ -36,9 +37,11 @@ function FlagIcon({ country }: { country: string }) {
     const iso = country.toLowerCase();
     return (
         <div className="w-12 h-12 rounded-full overflow-hidden">
-            <img
+            <Image
                 src={`https://flagcdn.com/w80/${iso}.png`}
                 alt={country}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
             />
         </div>
@@ -261,24 +264,76 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 }
 
 export default function PoolHealthStatus({ className = "" }: PoolHealthStatusProps) {
-    // 各プールのヘルス状態を動的に取得
-    const healthResults = POOL_NODES.map(pool => 
-        useSWR(`pool-health-${pool.url}`, () => checkPoolHealth(pool.url), {
-            refreshInterval: 120000,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: false,
-            errorRetryCount: 1,
-            errorRetryInterval: 60000,
-            dedupingInterval: 60000,
-            fallbackData: { isHealthy: false, lastChecked: Date.now() }
-        })
-    );
+    // React Hooksの制約により、各プールのヘルス状態を個別に取得
+    // プール数が固定されているため、この方法が最も適切
+    const pool0Health = useSWR(`pool-health-${POOL_NODES[0]?.url}`, () => POOL_NODES[0] ? checkPoolHealth(POOL_NODES[0].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const pool1Health = useSWR(`pool-health-${POOL_NODES[1]?.url}`, () => POOL_NODES[1] ? checkPoolHealth(POOL_NODES[1].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const pool2Health = useSWR(`pool-health-${POOL_NODES[2]?.url}`, () => POOL_NODES[2] ? checkPoolHealth(POOL_NODES[2].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const pool3Health = useSWR(`pool-health-${POOL_NODES[3]?.url}`, () => POOL_NODES[3] ? checkPoolHealth(POOL_NODES[3].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const pool4Health = useSWR(`pool-health-${POOL_NODES[4]?.url}`, () => POOL_NODES[4] ? checkPoolHealth(POOL_NODES[4].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    const pool5Health = useSWR(`pool-health-${POOL_NODES[5]?.url}`, () => POOL_NODES[5] ? checkPoolHealth(POOL_NODES[5].url) : Promise.resolve({ isHealthy: false, lastChecked: Date.now() }), {
+        refreshInterval: 120000,
+        revalidateOnFocus: false,
+        revalidateOnReconnect: false,
+        errorRetryCount: 1,
+        errorRetryInterval: 60000,
+        dedupingInterval: 60000,
+        fallbackData: { isHealthy: false, lastChecked: Date.now() }
+    });
+
+    // プールとヘルス結果を対応付け
+    const healthResults = [pool0Health, pool1Health, pool2Health, pool3Health, pool4Health, pool5Health];
 
     // ヘルスチェック結果をプールデータと組み合わせ
     const healthChecks = POOL_NODES.map((pool, index) => ({
         ...pool,
-        healthData: healthResults[index].data || { isHealthy: false, lastChecked: Date.now() },
-        isLoading: healthResults[index].data === undefined && !healthResults[index].error
+        healthData: healthResults[index]?.data || { isHealthy: false, lastChecked: Date.now() },
+        isLoading: healthResults[index]?.data === undefined && !healthResults[index]?.error
     }));
 
     // アクティブプールのみをカウント
