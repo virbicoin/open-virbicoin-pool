@@ -119,16 +119,10 @@ export default function DashboardStats({ stats: initialStats }: DashboardStatsPr
     return <DashboardStatsLoading />;
   }
 
-  const latestNode = data?.nodes && data.nodes.length > 0 ? data.nodes[0] : null;
-  
-  // 開発環境では個別の値を使用、本番環境では従来の計算を使用
-  const networkDifficulty = isDevelopment ? 
-    (data?.stats?.networkDifficulty || 0) :  // 開発環境: stats.networkDifficultyを使用
-    (latestNode ? parseFloat(latestNode.difficulty) : (data?.stats?.networkDifficulty || 0));
-    
-  const networkHashrateCalculationDifficulty = latestNode ? parseFloat(latestNode.difficulty) : (data?.stats?.networkDifficulty || 0);
-  const blockHeight = latestNode ? parseInt(latestNode.height) : (data?.stats?.height || 0);
-  const networkHashrate = calcNetworkHashrate(networkHashrateCalculationDifficulty, 10);
+  // 本番環境でも常にstatsから値を取得
+  const networkDifficulty = data?.stats?.networkDifficulty || 0;
+  const blockHeight = data?.stats?.height || 0;
+  const networkHashrate = calcNetworkHashrate(networkDifficulty, 10);
 
   // データの妥当性チェック - 開発環境では常に有効とみなす
   const isDataValid = isDevelopment || (networkHashrate > 1e9 && networkDifficulty > 1e6);
