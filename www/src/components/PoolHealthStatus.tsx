@@ -199,13 +199,13 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     let fetchUrl: string | undefined;
     
     if (url === 'stratum.digitalregion.jp') {
-        fetchUrl = '/api/proxy/pool/stats';
+        fetchUrl = '/api/pool/stats';
     } else {
         // stratum1.digitalregion.jp -> /api/proxy/pool1/stats, etc.
         const match = url.match(/stratum(\d+)\.digitalregion\.jp/);
         if (match) {
             const poolNumber = match[1];
-            fetchUrl = `/api/proxy/pool${poolNumber}/stats`;
+            fetchUrl = `/api/pool${poolNumber}/stats`;
         }
     }
     
