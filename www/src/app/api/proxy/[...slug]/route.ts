@@ -7,7 +7,7 @@ const POOL_ENDPOINTS = {
   'pool3': 'https://pool3.digitalregion.jp',
   'pool4': 'https://pool4.digitalregion.jp',
   'pool5': 'https://pool5.digitalregion.jp',
-  'pool': 'https://pool.digitalregion.jp' // メインプールはHTTPS
+  'pool': 'https://pool.digitalregion.jp'
 };
 
 export async function GET(

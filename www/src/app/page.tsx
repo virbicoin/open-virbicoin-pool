@@ -14,12 +14,12 @@ export default async function Home() {
   const latestNode = stats.nodes && stats.nodes.length > 0 ? stats.nodes[0] : null;
   const networkDifficulty = latestNode ? parseFloat(latestNode.difficulty) : (stats.stats?.networkDifficulty || 0);
   const blockHeight = latestNode ? parseInt(latestNode.height) : (stats.stats?.height || 0);
-  // blockTimeは10秒で固定（VBC仕様）
-  const networkHashrate = calcNetworkHashrate(networkDifficulty, 10);
+  // blockTimeは12秒で固定（VBC仕様）
+  const networkHashrate = calcNetworkHashrate(networkDifficulty, 12);
   
   // データの妥当性チェック - 無効なデータの場合は空のオブジェクトを渡す
-  const isDataValid = networkHashrate > 1e9 && networkDifficulty > 1e6; // 最低1GH/s, 1M difficulty
-  
+  const isDataValid = networkHashrate > 1e6 && networkDifficulty > 1e6; // 最低1MH/s, 1M difficulty
+
   const dashboardStats = isDataValid ? {
     hashrate: stats.hashrate || 0,
     miners: stats.minersTotal || 0,
