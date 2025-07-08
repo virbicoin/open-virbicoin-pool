@@ -45,7 +45,8 @@ function FlagIcon({ country }: { country: string }) {
     );
 }
 
-const POOL_NODES: PoolNode[] = [
+// アクティブプール（稼働中）
+const ACTIVE_POOL_NODES: PoolNode[] = [
     {
         url: "stratum.digitalregion.jp",
         location: "Global",
@@ -64,7 +65,7 @@ const POOL_NODES: PoolNode[] = [
     },
     {
         url: "stratum2.digitalregion.jp",
-        location: "Central Japan",
+        location: "Japan Central",
         flag: "🇯🇵",
         country: "JP",
         stratumPort: 8002,
@@ -80,12 +81,16 @@ const POOL_NODES: PoolNode[] = [
     },
     {
         url: "stratum4.digitalregion.jp",
-        location: "Central Sweden",
+        location: "Sweden Central",
         flag: "🇸🇪",
         country: "SE",
         stratumPort: 8002,
         region: "North Europe"
-    },
+    }
+];
+
+// 非アクティブプール（未実装・Coming Soon）
+const INACTIVE_POOL_NODES: PoolNode[] = [
     {
         url: "stratum5.digitalregion.jp",
         location: "Western USA",
@@ -96,36 +101,56 @@ const POOL_NODES: PoolNode[] = [
     }
 ];
 
+// 全プールノード（表示用）
+const POOL_NODES: PoolNode[] = [...ACTIVE_POOL_NODES, ...INACTIVE_POOL_NODES];
+
 // プールのヘルス状態をチェックする関数
 async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     const startTime = Date.now();
 
     // 開発環境での模擬データ
     if ((process.env.NODE_ENV as string) === 'development') {
-        // プールごとに異なる確率でオンライン状態をシミュレート
-        const healthProbability = {
-            'stratum.digitalregion.jp': 0.90,  // Global - 90%の確率でオンライン
-            'stratum1.digitalregion.jp': 0.90, // India - 90%の確率でオンライン
-            'stratum2.digitalregion.jp': 0.90, // Japan - 90%の確率でオンライン
-            'stratum3.digitalregion.jp': 0.90, // East USA - 90%の確率でオンライン
-            'stratum4.digitalregion.jp': 0.00, // Sweden - まだ稼働していないため0%
-            'stratum5.digitalregion.jp': 0.00  // Western USA - まだ稼働していないため0%
-        };
-
-        const latencyBase = {
-            'stratum.digitalregion.jp': 50,   // Global - 基本50ms
-            'stratum1.digitalregion.jp': 180, // West India - 基本180ms
-            'stratum2.digitalregion.jp': 20,  // Central Japan - 基本20ms
-            'stratum3.digitalregion.jp': 150, // East USA - 基本150ms
-            'stratum4.digitalregion.jp': 120, // Sweden - 基本120ms
-            'stratum5.digitalregion.jp': 130  // Western USA - 基本130ms
-        };
+        // プール設定から動的に生成
+        const healthProbability: Record<string, number> = {};
+        const latencyBase: Record<string, number> = {};
+        
+        // アクティブプールは90%確率でオンライン
+        ACTIVE_POOL_NODES.forEach(pool => {
+            healthProbability[pool.url] = 0.90;
+            // 地域別の基本レイテンシを設定
+            switch (pool.region) {
+                case 'Global':
+                    latencyBase[pool.url] = 50;
+                    break;
+                case 'South Asia':
+                    latencyBase[pool.url] = 180;
+                    break;
+                case 'North East Asia':
+                    latencyBase[pool.url] = 20;
+                    break;
+                case 'North America':
+                    latencyBase[pool.url] = 150;
+                    break;
+                case 'North Europe':
+                    latencyBase[pool.url] = 120;
+                    break;
+                default:
+                    latencyBase[pool.url] = 100;
+            }
+        });
+        
+        // 非アクティブプールは0%確率
+        INACTIVE_POOL_NODES.forEach(pool => {
+            healthProbability[pool.url] = 0.00;
+            latencyBase[pool.url] = 130; // 仮想値
+        });
 
         const probability = healthProbability[url as keyof typeof healthProbability] || 0.95;
         const baseLatency = latencyBase[url as keyof typeof latencyBase] || 100;
 
-        // stratum4.digitalregion.jpとstratum5.digitalregion.jpはまだ稼働していないため、特別処理
-        if (url === 'stratum4.digitalregion.jp' || url === 'stratum5.digitalregion.jp') {
+        // 非アクティブプールは特別処理
+        const isInactivePool = INACTIVE_POOL_NODES.some(node => node.url === url);
+        if (isInactivePool) {
             await new Promise(resolve => setTimeout(resolve, 2000)); // 2秒待機
             return {
                 isHealthy: false,
@@ -161,12 +186,23 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         // 開発モードでは Next.js API プロキシを利用
         fetchPath = `/api/proxy/${url}/api/stats`;
     } else {
-        const proxyPathMapping: Record<string, string> = {
-            'stratum.digitalregion.jp': '/api/stats',
-            'stratum1.digitalregion.jp': '/api/pool1/stats',
-            'stratum2.digitalregion.jp': '/api/pool2/stats',
-            'stratum3.digitalregion.jp': '/api/pool3/stats'
-        };
+        // プールリストから動的にプロキシパスマッピングを生成
+        const proxyPathMapping: Record<string, string> = {};
+        
+        // アクティブプールのみプロキシパスを設定
+        ACTIVE_POOL_NODES.forEach(pool => {
+            if (pool.url === 'stratum.digitalregion.jp') {
+                proxyPathMapping[pool.url] = '/api/stats';
+            } else {
+                // stratum1.digitalregion.jp -> pool1, stratum2.digitalregion.jp -> pool2, etc.
+                const match = pool.url.match(/stratum(\d+)\.digitalregion\.jp/);
+                if (match) {
+                    const poolNumber = match[1];
+                    proxyPathMapping[pool.url] = `/api/pool${poolNumber}/stats`;
+                }
+            }
+        });
+        
         fetchPath = proxyPathMapping[url];
     }
     if (!fetchPath) {
@@ -225,103 +261,29 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 }
 
 export default function PoolHealthStatus({ className = "" }: PoolHealthStatusProps) {
-    // 各プールのヘルス状態を取得
-    const globalHealth = useSWR(`pool-health-${POOL_NODES[0].url}`, () => checkPoolHealth(POOL_NODES[0].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
+    // 各プールのヘルス状態を動的に取得
+    const healthResults = POOL_NODES.map(pool => 
+        useSWR(`pool-health-${pool.url}`, () => checkPoolHealth(pool.url), {
+            refreshInterval: 120000,
+            revalidateOnFocus: false,
+            revalidateOnReconnect: false,
+            errorRetryCount: 1,
+            errorRetryInterval: 60000,
+            dedupingInterval: 60000,
+            fallbackData: { isHealthy: false, lastChecked: Date.now() }
+        })
+    );
 
-    const indiaHealth = useSWR(`pool-health-${POOL_NODES[1].url}`, () => checkPoolHealth(POOL_NODES[1].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
+    // ヘルスチェック結果をプールデータと組み合わせ
+    const healthChecks = POOL_NODES.map((pool, index) => ({
+        ...pool,
+        healthData: healthResults[index].data || { isHealthy: false, lastChecked: Date.now() },
+        isLoading: healthResults[index].data === undefined && !healthResults[index].error
+    }));
 
-    const japanHealth = useSWR(`pool-health-${POOL_NODES[2].url}`, () => checkPoolHealth(POOL_NODES[2].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
-
-    const usaEastHealth = useSWR(`pool-health-${POOL_NODES[3].url}`, () => checkPoolHealth(POOL_NODES[3].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
-
-    const swedenHealth = useSWR(`pool-health-${POOL_NODES[4].url}`, () => checkPoolHealth(POOL_NODES[4].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
-
-    const usaWestHealth = useSWR(`pool-health-${POOL_NODES[5].url}`, () => checkPoolHealth(POOL_NODES[5].url), {
-        refreshInterval: 120000,
-        revalidateOnFocus: false,
-        revalidateOnReconnect: false,
-        errorRetryCount: 1,
-        errorRetryInterval: 60000,
-        dedupingInterval: 60000,
-        fallbackData: { isHealthy: false, lastChecked: Date.now() }
-    });
-
-    const healthChecks = [
-        {
-            ...POOL_NODES[0],
-            healthData: globalHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: globalHealth.data === undefined && !globalHealth.error
-        },
-        {
-            ...POOL_NODES[1],
-            healthData: indiaHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: indiaHealth.data === undefined && !indiaHealth.error
-        },
-        {
-            ...POOL_NODES[2],
-            healthData: japanHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: japanHealth.data === undefined && !japanHealth.error
-        },
-        {
-            ...POOL_NODES[3],
-            healthData: usaEastHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: usaEastHealth.data === undefined && !usaEastHealth.error
-        },
-        {
-            ...POOL_NODES[4],
-            healthData: swedenHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: swedenHealth.data === undefined && !swedenHealth.error
-        },
-        {
-            ...POOL_NODES[5],
-            healthData: usaWestHealth.data || { isHealthy: false, lastChecked: Date.now() },
-            isLoading: usaWestHealth.data === undefined && !usaWestHealth.error
-        }
-    ];
-
-    // stratum4（Coming Soon）とstratum5（Coming Soon）を除外してアクティブなプールのみカウント
+    // アクティブプールのみをカウント
     const activeHealthChecks = healthChecks.filter(check =>
-        check.url !== 'stratum4.digitalregion.jp' && check.url !== 'stratum5.digitalregion.jp'
+        ACTIVE_POOL_NODES.some(node => node.url === check.url)
     );
     const healthyCount = activeHealthChecks.filter(check => check.healthData.isHealthy).length;
     const totalCount = activeHealthChecks.length;
@@ -359,7 +321,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                     {healthChecks.map((pool, index) => (
                         <div
                             key={pool.url}
-                            className={`w-full p-6 rounded-lg border transition-all duration-300 hover:shadow-lg min-h-[160px] ${pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp' ?
+                            className={`w-full p-6 rounded-lg border transition-all duration-300 hover:shadow-lg min-h-[160px] ${INACTIVE_POOL_NODES.some(node => node.url === pool.url) ?
                                 'bg-gray-800/30 border-gray-600/50 opacity-60' :
                             `bg-gray-700/50 hover:bg-gray-700/70 ${pool.healthData.isHealthy ? 'border-green-400/30 shadow-green-400/10' :
                                 pool.isLoading ? 'border-gray-600/50' : 'border-red-400/30 shadow-red-400/10'
@@ -392,11 +354,11 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                         </div>
                                         <span className={`text-xs font-medium px-3 py-1 rounded-full ${pool.isLoading ? 'bg-gray-600/50 text-gray-300' :
                                             pool.healthData.isHealthy ? 'bg-green-400/20 text-green-400' :
-                                                (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'bg-orange-500/20 text-orange-400' : 'bg-red-400/20 text-red-400'
+                                                INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'bg-orange-500/20 text-orange-400' : 'bg-red-400/20 text-red-400'
                                             }`}>
                                             {pool.isLoading ? 'Checking' :
                                                 pool.healthData.isHealthy ? 'Online' :
-                                                    (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'Coming Soon' : 'Offline'}
+                                                    INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'Coming Soon' : 'Offline'}
                                         </span>
                                     </div>
 
@@ -408,17 +370,17 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                     <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
                                         <span className="text-gray-400 text-xs mb-1">Latency</span>
                                         <span className={`font-mono font-medium text-xs ${pool.healthData.latency ? 'text-white' :
-                                            (pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'text-gray-500' : 'text-gray-500'
+                                            INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'text-gray-500' : 'text-gray-500'
                                             }`}>
-                                            {(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? '---' :
+                                            {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? '---' :
                                                 pool.healthData.latency ? `${pool.healthData.latency}ms` : 'N/A'}
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
                                         <span className="text-gray-400 text-xs mb-1">Port</span>
-                                        <span className={`font-medium text-xs ${(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? 'text-gray-500' : 'text-white'
+                                        <span className={`font-medium text-xs ${INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'text-gray-500' : 'text-white'
                                             }`}>
-                                            {(pool.url === 'stratum4.digitalregion.jp' || pool.url === 'stratum5.digitalregion.jp') ? '---' : pool.stratumPort}
+                                            {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? '---' : pool.stratumPort}
                                         </span>
                                     </div>
                                     <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
@@ -439,11 +401,7 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                 <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-400">Last updated:</span>
                     <span className="text-gray-300">
-                        {new Date().toLocaleTimeString('ja-JP', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit'
-                        })}
+                        {new Date().toLocaleString(undefined, { timeZoneName: 'short' }) || 'N/A'}
                     </span>
                 </div>
 
