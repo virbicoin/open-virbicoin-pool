@@ -83,13 +83,17 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
     }
   };
   
-  const fetcher = (url: string) => {
+  const fetcher = async (url: string) => {
     if (isDevelopment) {
-      // 開発環境またはローカル環境では模擬データを返す
+      // 開発環境では模擬データを返す
       return Promise.resolve(mockData);
     }
     // 本番環境ではAPIプロキシを使用
-    return fetch(url).then(res => res.json());
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
   };
   
   // useSWRは常に呼び出す（Reactフックのルール）
@@ -120,8 +124,8 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
     return <DashboardStatsLoading />;
   }
 
-  // 本番環境でのデータ妥当性チェック
-  if (!isDevelopment && (!data.stats || typeof data.hashrate !== 'number')) {
+  // 本番環境でのデータ妥当性チェック - より寛容に
+  if (!isDevelopment && (!data || typeof data.hashrate !== 'number')) {
     return <DashboardStatsLoading />;
   }
 
@@ -180,7 +184,7 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
         <CubeIcon className="w-8 h-8 text-orange-400" />
         <div>
           <h3 className="text-lg font-semibold text-gray-300 mb-1">Blockchain Height</h3>
-          <p className="text-2xl font-bold text-blue-500">{(stats.blockHeight || 0).toLocaleString()} Blocks</p>
+          <p className="text-2xl font-bold text-blue-500">{stats.blockHeight > 0 ? stats.blockHeight.toLocaleString() : '0'} Blocks</p>
           <span className="text-sm text-gray-400 block mt-1">Best viewed in a <a href={`https://explorer.digitalregion.jp/block/${stats.blockHeight}`} target="_blank" rel="noopener noreferrer">block explorer</a></span>
         </div>
       </div>
