@@ -9,7 +9,7 @@ interface PoolNode {
     location: string;
     flag: string;
     country: string;
-    stratumPort: number;
+    stratumPorts: number[];
     region: string;
 }
 
@@ -55,7 +55,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         location: "Global",
         flag: "🌍",
         country: "GLOBAL",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "Global"
     },
     {
@@ -63,7 +63,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         location: "Western India",
         flag: "🇮🇳",
         country: "IN",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "South Asia"
     },
     {
@@ -71,7 +71,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         location: "Japan Central",
         flag: "🇯🇵",
         country: "JP",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "North East Asia"
     },
     {
@@ -79,7 +79,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         location: "Eastern USA",
         flag: "🇺🇸",
         country: "US",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "North America"
     },
     {
@@ -87,7 +87,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         location: "Sweden Central",
         flag: "🇸🇪",
         country: "SE",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "North Europe"
     }
 ];
@@ -99,7 +99,7 @@ const INACTIVE_POOL_NODES: PoolNode[] = [
         location: "Western USA",
         flag: "🇺🇸",
         country: "US",
-        stratumPort: 8002,
+        stratumPorts: [8002, 8004, 8009],
         region: "North America"
     }
 ];
@@ -110,9 +110,18 @@ const POOL_NODES: PoolNode[] = [...ACTIVE_POOL_NODES, ...INACTIVE_POOL_NODES];
 // プールのヘルス状態をチェックする関数
 async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     const startTime = Date.now();
+    
+    // ローカル環境（開発・本番問わず）では模擬データを使用
+    const isLocalhost = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    const isDevelopment = process.env.NODE_ENV === 'development' || isLocalhost;
 
-    // 開発環境での模擬データ
-    if ((process.env.NODE_ENV as string) === 'development') {
+    console.log(`[HealthCheck] Starting health check for ${url}, NODE_ENV: ${process.env.NODE_ENV}, isLocalhost: ${isLocalhost}, isDevelopment: ${isDevelopment}`);
+
+    // 開発環境またはローカル環境での模擬データ（ブラウザ側でのチェック）
+    if (isDevelopment) {
+        console.log(`[Dev Mode] Using simulated health check for ${url}`);
+        
         // プール設定から動的に生成
         const healthProbability: Record<string, number> = {};
         const latencyBase: Record<string, number> = {};
@@ -123,10 +132,10 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
             // 地域別の基本レイテンシを設定
             switch (pool.region) {
                 case 'Global':
-                    latencyBase[pool.url] = 50;
+                    latencyBase[pool.url] = 10;
                     break;
                 case 'South Asia':
-                    latencyBase[pool.url] = 180;
+                    latencyBase[pool.url] = 120;
                     break;
                 case 'North East Asia':
                     latencyBase[pool.url] = 20;
@@ -135,7 +144,7 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
                     latencyBase[pool.url] = 150;
                     break;
                 case 'North Europe':
-                    latencyBase[pool.url] = 120;
+                    latencyBase[pool.url] = 280;
                     break;
                 default:
                     latencyBase[pool.url] = 100;
@@ -183,51 +192,43 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         };
     }
 
-    // リクエストパスの決定: 開発環境は Next.js API ルート、本番環境は Nginx プロキシパス
-    let fetchPath: string | undefined;
-    if ((process.env.NODE_ENV as string) !== 'production') {
-        // 開発モードでは Next.js API プロキシを利用
-        fetchPath = `/api/proxy/${url}/api/stats`;
+    // 本番環境：Next.jsのAPIプロキシを使用
+    console.log(`[Production Mode] Using API proxy for ${url}`);
+    
+    // リクエストパス決定: 常にNext.jsのAPIプロキシを使用
+    let fetchUrl: string | undefined;
+    
+    if (url === 'stratum.digitalregion.jp') {
+        fetchUrl = '/api/proxy/stats';
     } else {
-        // プールリストから動的にプロキシパスマッピングを生成
-        const proxyPathMapping: Record<string, string> = {};
-        
-        // アクティブプールのみプロキシパスを設定
-        ACTIVE_POOL_NODES.forEach(pool => {
-            if (pool.url === 'stratum.digitalregion.jp') {
-                proxyPathMapping[pool.url] = '/api/stats';
-            } else {
-                // stratum1.digitalregion.jp -> pool1, stratum2.digitalregion.jp -> pool2, etc.
-                const match = pool.url.match(/stratum(\d+)\.digitalregion\.jp/);
-                if (match) {
-                    const poolNumber = match[1];
-                    proxyPathMapping[pool.url] = `/api/pool${poolNumber}/stats`;
-                }
-            }
-        });
-        
-        fetchPath = proxyPathMapping[url];
+        // stratum1.digitalregion.jp -> /api/proxy/pool1/stats, etc.
+        const match = url.match(/stratum(\d+)\.digitalregion\.jp/);
+        if (match) {
+            const poolNumber = match[1];
+            fetchUrl = `/api/proxy/pool${poolNumber}/stats`;
+        }
     }
-    if (!fetchPath) {
+    
+    console.log(`[Production] Fetch URL: ${fetchUrl} for pool: ${url}`);
+    if (!fetchUrl) {
         return { isHealthy: false, lastChecked: Date.now() };
     }
 
     try {
-        // 決定したパスへリクエスト
-        const response = await fetch(fetchPath, {
+        // 決定したURLへリクエスト
+        const response = await fetch(fetchUrl, {
             method: 'GET',
             signal: AbortSignal.timeout(15000), // 15秒タイムアウト
-            headers: {
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            }
+            // CORSの問題を回避するためヘッダーを最小限に
+            mode: 'cors',
+            credentials: 'omit'
         });
 
         const endTime = Date.now();
         // ブラウザ〜プロキシ間のラウンドトリップを計測
         const latency = endTime - startTime;
 
-        console.log(`[Health] ${url} (${fetchPath}): ${response.status} in ${latency}ms`);
+        console.log(`[Health] ${url} (${fetchUrl}): ${response.status} in ${latency}ms`);
 
         if (response.ok) {
             const data = await response.json();
@@ -248,14 +249,14 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         }
         
         // レスポンスエラーの場合
-        console.warn(`[Health] HTTP error for ${url} (${fetchPath}): ${response.status}`);
+        console.warn(`[Health] HTTP error for ${url} (${fetchUrl}): ${response.status}`);
         return {
             isHealthy: false,
             lastChecked: Date.now()
         };
         
     } catch (error) {
-        console.error(`Health check failed for ${url} (${fetchPath}):`, error);
+        console.error(`Health check failed for ${url} (${fetchUrl}):`, error);
         return {
             isHealthy: false,
             lastChecked: Date.now()
@@ -431,18 +432,22 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                                 pool.healthData.latency ? `${pool.healthData.latency}ms` : 'N/A'}
                                         </span>
                                     </div>
-                                    <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
-                                        <span className="text-gray-400 text-xs mb-1">Port</span>
-                                        <span className={`font-medium text-xs ${INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'text-gray-500' : 'text-white'
-                                            }`}>
-                                            {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? '---' : pool.stratumPort}
-                                        </span>
-                                    </div>
-                                    <div className="flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
-                                        <span className="text-gray-400 text-xs mb-1">Region</span>
-                                        <span className="text-white font-medium text-xs text-center leading-tight w-full overflow-hidden">
-                                            {pool.region}
-                                        </span>
+                                    <div className="col-span-2 flex flex-col items-center p-2.5 bg-gray-800/50 rounded-lg min-w-0">
+                                        <span className="text-gray-400 text-xs mb-1">Stratum Ports</span>
+                                        <div className="flex justify-center gap-1">
+                                            {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? (
+                                                <span className="text-gray-500 font-medium text-xs">---</span>
+                                            ) : (
+                                                pool.stratumPorts.map((port, portIndex) => (
+                                                    <span 
+                                                        key={portIndex}
+                                                        className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-xs font-medium"
+                                                    >
+                                                        {port}
+                                                    </span>
+                                                ))
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

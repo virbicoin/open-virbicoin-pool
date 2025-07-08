@@ -1,9 +1,33 @@
 import { NextResponse } from 'next/server';
+import { hostname } from 'os';
 
-// フロントエンドの稼働確認用ヘルスチェックエンドポイント
 export async function GET() {
-  return NextResponse.json({
-    status: 'healthy',
-    time: new Date().toISOString(),
-  });
+    try {
+        // サーバーのヘルス情報を返す
+        const healthData = {
+            status: 'OK',
+            hostname: hostname(),
+            time: new Date().toISOString(),
+            timestamp: Date.now()
+        };
+
+        return NextResponse.json(healthData, {
+            status: 200,
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        });
+    } catch (error) {
+        console.error('Health check error:', error);
+        return NextResponse.json(
+            { 
+                status: 'ERROR', 
+                error: 'Health check failed',
+                time: new Date().toISOString()
+            },
+            { status: 500 }
+        );
+    }
 }

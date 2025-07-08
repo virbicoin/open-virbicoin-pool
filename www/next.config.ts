@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   assetPrefix: "/",
   allowedDevOrigins: ['localhost', '*.digitalregion.jp'],
   images: {
-    domains: ['flagcdn.com'],
     remotePatterns: [
       {
         protocol: 'https',

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import HeaderStats from "@/components/HeaderStats";
+import GlobalHealthChecker from "@/components/GlobalHealthChecker";
 import {
   HomeIcon,
   QuestionMarkCircleIcon,
@@ -32,6 +33,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-screen flex flex-col`}>
+        <GlobalHealthChecker />
         <header className="bg-gray-900 border-b border-gray-800">
           <nav className="container mx-auto px-2 flex items-center justify-between h-14">
             <Link href="/" className="text-xl font-bold nav-link text-gray-100 hover:text-blue-400 transition-colors">
