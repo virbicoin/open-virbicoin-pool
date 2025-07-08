@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // プールエンドポイントのマッピング
 const POOL_ENDPOINTS = {
-  'pool1': 'http://pool1.digitalregion.jp',
-  'pool2': 'http://pool2.digitalregion.jp',
-  'pool3': 'http://pool3.digitalregion.jp',
+  'pool1': 'https://pool1.digitalregion.jp',
+  'pool2': 'https://pool2.digitalregion.jp',
+  'pool3': 'https://pool3.digitalregion.jp',
+  'pool4': 'https://pool4.digitalregion.jp',
+  'pool5': 'https://pool5.digitalregion.jp',
   'pool': 'https://pool.digitalregion.jp' // メインプールはHTTPS
 };
 
