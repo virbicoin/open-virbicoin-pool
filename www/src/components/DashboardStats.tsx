@@ -83,13 +83,14 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
     }
   };
   
-  const fetcher = async (url: string) => {
+  const fetcher = async () => {
     if (isDevelopment) {
       // 開発環境では模擬データを返す
       return Promise.resolve(mockData);
     }
-    // 本番環境ではAPIプロキシを使用
-    const response = await fetch(url);
+    // 本番環境では実際のAPIから取得
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pool.digitalregion.jp';
+    const response = await fetch(`${apiUrl}/api/stats`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -97,15 +98,18 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
   };
   
   // useSWRは常に呼び出す（Reactフックのルール）
-  const swrResult = useSWR("/api/stats", fetcher, { 
-    refreshInterval: isDevelopment ? 0 : 5000, // 開発環境では自動更新を無効化
-    // 本番環境では初期データを使用しない（APIから正しいデータを取得するため）
-    revalidateOnFocus: false,
-    revalidateOnReconnect: !isDevelopment, // 開発環境では再接続時の再検証を無効化
-    dedupingInterval: 2000,
-    errorRetryInterval: 1000,
-    errorRetryCount: isDevelopment ? 0 : 3, // 開発環境ではリトライを無効化
-  });
+  const swrResult = useSWR(
+    isDevelopment ? "/api/stats" : "api-stats", // 本番環境では直接APIアクセス
+    fetcher, 
+    { 
+      refreshInterval: isDevelopment ? 0 : 5000, // 開発環境では自動更新を無効化
+      revalidateOnFocus: false,
+      revalidateOnReconnect: !isDevelopment, // 開発環境では再接続時の再検証を無効化
+      dedupingInterval: 2000,
+      errorRetryInterval: 1000,
+      errorRetryCount: isDevelopment ? 0 : 3, // 開発環境ではリトライを無効化
+    }
+  );
 
   // 開発環境では模擬データを使用
   const swr = isDevelopment ? 
@@ -129,16 +133,48 @@ export default function DashboardStats({ stats: _ }: DashboardStatsProps) {
     return <DashboardStatsLoading />;
   }
 
-  // 統計データを安全に取得
+  // 統計データを安全に取得 - フロントエンド側で計算
+  let networkHashrate = 0;
+  let networkDifficulty = 0;
+  let blockHeight = 0;
+  let roundVariance = 0;
+
+  // nodesから最大のdifficultyとheightを計算
+  if (data?.nodes && Array.isArray(data.nodes)) {
+    data.nodes.forEach((node: { difficulty: string | number; height: string | number }) => {
+      const difficulty = typeof node.difficulty === 'string' ? parseFloat(node.difficulty) : node.difficulty;
+      const height = typeof node.height === 'string' ? parseInt(node.height) : node.height;
+      
+      if (!isNaN(difficulty) && difficulty > networkDifficulty) {
+        networkDifficulty = difficulty;
+      }
+      if (!isNaN(height) && height > blockHeight) {
+        blockHeight = height;
+      }
+    });
+  }
+
+  // ネットワークハッシュレートを計算
+  if (networkDifficulty > 0) {
+    const blockTime = 10; // Virbicoinのブロック時間（秒）
+    networkHashrate = networkDifficulty / blockTime;
+  }
+
+  // roundVarianceを計算
+  if (data?.stats?.roundShares && networkDifficulty > 0) {
+    roundVariance = (data.stats.roundShares / networkDifficulty) * 100;
+  }
+
+  // APIから取得したデータと計算値を使用（本番環境では計算値、ローカルではAPI値を優先）
   const stats = {
     hashrate: data?.hashrate || 0,
     miners: data?.minersTotal || 0,
     workers: data?.minersTotal || 0,
     lastBlockFound: data?.stats?.lastBlockFound || 0,
-    networkHashrate: data?.stats?.networkHashrate || 0,
-    networkDifficulty: data?.stats?.networkDifficulty || 0,
-    blockHeight: data?.stats?.height || 0,
-    roundVariance: data?.stats?.roundVariance || 0,
+    networkHashrate: data?.stats?.networkHashrate || networkHashrate,
+    networkDifficulty: data?.stats?.networkDifficulty || networkDifficulty,
+    blockHeight: data?.stats?.height || blockHeight,
+    roundVariance: data?.stats?.roundVariance || roundVariance,
   };
 
   return (
