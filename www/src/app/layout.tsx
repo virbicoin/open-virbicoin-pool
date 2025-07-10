@@ -80,7 +80,7 @@ export default async function RootLayout({
         <footer className="bg-gray-900 border-t border-gray-800">
           <div className="container mx-auto px-2 py-2 flex items-center justify-center text-gray-400">
             <div className="space-x-2 text-sm flex items-center">
-              <span>© 2024-{new Date().getFullYear()} Digitalregion, Inc.</span>
+              <span>&copy; 2024-{new Date().getFullYear()} Digitalregion, Inc.</span>
               <span>|</span>
               <a href="https://github.com/virbicoin/open-virbicoin-pool" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors inline-flex items-center gap-1 align-middle">
                 <SiGithub className="w-4 h-4" />
