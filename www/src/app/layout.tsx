@@ -100,7 +100,7 @@ export default async function RootLayout({
                 <SiBitcoin className="w-4 h-4" />
               </a>
               <span>|</span>
-              <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
+              <a href="https://discord.digitalregion.jp" target="_blank" rel="noopener noreferrer" className="hover:text-gray-100 transition-colors">
                 <SiDiscord className="w-4 h-4" />
               </a>
               <span>|</span>
