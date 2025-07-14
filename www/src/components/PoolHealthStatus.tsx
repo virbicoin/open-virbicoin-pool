@@ -68,11 +68,11 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
     },
     {
         url: "stratum2.digitalregion.jp",
-        location: "Japan Central",
-        flag: "🇯🇵",
-        country: "JP",
+        location: "Hong Kong",
+        flag: "🇭🇰",
+        country: "HK",
         stratumPorts: [8002, 8004, 8009],
-        region: "North East Asia"
+        region: "East Asia"
     },
     {
         url: "stratum3.digitalregion.jp",
@@ -89,11 +89,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
         country: "SE",
         stratumPorts: [8002, 8004, 8009],
         region: "North Europe"
-    }
-];
-
-// 非アクティブプール（未実装・Coming Soon）
-const INACTIVE_POOL_NODES: PoolNode[] = [
+    },
     {
         url: "stratum5.digitalregion.jp",
         location: "Western USA",
@@ -101,6 +97,34 @@ const INACTIVE_POOL_NODES: PoolNode[] = [
         country: "US",
         stratumPorts: [8002, 8004, 8009],
         region: "North America"
+    }
+];
+
+// 非アクティブプール（未実装・Coming Soon）
+const INACTIVE_POOL_NODES: PoolNode[] = [
+    {
+        url: "stratum6.digitalregion.jp",
+        location: "Australia Central",
+        flag: "🇦🇺",
+        country: "AU",
+        stratumPorts: [8002, 8004, 8009],
+        region: "Pacific Ocean"
+    },
+    {
+        url: "stratum7.digitalregion.jp",
+        location: "Brazil Central",
+        flag: "🇧🇷",
+        country: "BR",
+        stratumPorts: [8002, 8004, 8009],
+        region: "South America"
+    },
+    {
+        url: "stratum8.digitalregion.jp",
+        location: "South Africa",
+        flag: "🇿🇦",
+        country: "ZA",
+        stratumPorts: [8002, 8004, 8009],
+        region: "South Africa"
     }
 ];
 
