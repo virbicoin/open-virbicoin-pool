@@ -60,16 +60,16 @@ export default async function RootLayout({
                 </Link>
               </li>
               <li>
-                <a href="https://stats.digitalregion.jp/" rel="noopener noreferrer" className="nav-link text-gray-200 flex items-center gap-1">
-                  <GlobeAltIcon className="w-5 h-5" />
-                  <span>Network</span>
-                </a>
-              </li>
-              <li>
                 <Link href="/about" className="nav-link text-gray-200 flex items-center gap-1">
                   <InformationCircleIcon className="w-5 h-5" />
                   <span>About</span>
                 </Link>
+              </li>
+              <li>
+                <a href="https://stats.digitalregion.jp/" target="_blank" rel="noopener noreferrer" className="nav-link text-gray-200 flex items-center gap-1">
+                  <GlobeAltIcon className="w-5 h-5" />
+                  <span>Network</span>
+                </a>
               </li>
             </ul>
           </nav>
