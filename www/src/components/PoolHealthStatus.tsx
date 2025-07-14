@@ -104,7 +104,7 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
 const INACTIVE_POOL_NODES: PoolNode[] = [
     {
         url: "stratum6.digitalregion.jp",
-        location: "Australia Central",
+        location: "Australia East",
         flag: "🇦🇺",
         country: "AU",
         stratumPorts: [8002, 8004, 8009],
@@ -120,7 +120,7 @@ const INACTIVE_POOL_NODES: PoolNode[] = [
     },
     {
         url: "stratum8.digitalregion.jp",
-        location: "South Africa",
+        location: "South Africa East",
         flag: "🇿🇦",
         country: "ZA",
         stratumPorts: [8002, 8004, 8009],
