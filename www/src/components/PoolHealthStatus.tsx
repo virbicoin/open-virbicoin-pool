@@ -383,7 +383,10 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                 <FlagIcon country={pool.country} />
                                 {/* ステータスバッジ */}
                                 <div className="absolute -bottom-1 -right-1">
-                                    {pool.isLoading ? (
+                                    {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? (
+                                        // Show a static gray circle for "Coming Soon" pools instead of a spinner
+                                        <div className="w-4 h-4 bg-gray-400 rounded-full shadow-lg"></div>
+                                    ) : pool.isLoading ? (
                                         <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin bg-gray-800"></div>
                                     ) : pool.healthData.isHealthy ? (
                                         <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse shadow-lg"></div>
@@ -400,13 +403,23 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                         <div className="flex items-center gap-2">
                                             <h4 className="text-white font-semibold text-base truncate">{pool.location}</h4>
                                         </div>
-                                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${pool.isLoading ? 'bg-gray-600/50 text-gray-300' :
-                                            pool.healthData.isHealthy ? 'bg-green-400/20 text-green-400' :
-                                                INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'bg-orange-500/20 text-orange-400' : 'bg-red-400/20 text-red-400'
-                                            }`}>
-                                            {pool.isLoading ? 'Checking' :
-                                                pool.healthData.isHealthy ? 'Online' :
-                                                    INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? 'Coming Soon' : 'Offline'}
+                                        <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+  INACTIVE_POOL_NODES.some(node => node.url === pool.url)
+    ? 'bg-orange-500/20 text-orange-400'
+    : pool.isLoading
+      ? 'bg-gray-600/50 text-gray-300'
+      : pool.healthData.isHealthy
+        ? 'bg-green-400/20 text-green-400'
+        : 'bg-red-400/20 text-red-400'
+}`}>
+                                            {/* Always show "Coming Soon" for inactive pools, regardless of loading state */}
+                                            {INACTIVE_POOL_NODES.some(node => node.url === pool.url)
+                                                ? 'Coming Soon'
+                                                : pool.isLoading
+                                                    ? 'Checking'
+                                                    : pool.healthData.isHealthy
+                                                        ? 'Online'
+                                                        : 'Offline'}
                                         </span>
                                     </div>
 
