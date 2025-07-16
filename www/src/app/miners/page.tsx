@@ -4,6 +4,7 @@ import useSWR from "swr";
 import Link from 'next/link';
 import { formatHashrate } from '@/lib/formatters';
 import TimeAgo from '@/components/TimeAgo';
+import { UserGroupIcon } from "@heroicons/react/24/outline";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 const fetcher = (url: string) => fetch(url).then(res => res.json());
@@ -28,7 +29,10 @@ export default function MinersPage() {
     <div>
       <div className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-2 text-gray-100">Miners</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <UserGroupIcon className="w-8 h-8 text-green-400" />
+            <h1 className="text-3xl font-bold text-gray-100">Miners</h1>
+          </div>
           <p className="text-gray-400">List of all active miners in the pool ({minersArray.length} total).</p>
         </div>
       </div>

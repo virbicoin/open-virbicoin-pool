@@ -60,7 +60,7 @@ const MetaMaskButton = () => {
 
   return (
     <button
-      className="flex items-center bg-[#2c2c2c] text-white border-2 border-blue-500 hover:border-blue-600 rounded px-4 py-2 transition-colors duration-200"
+      className="flex items-center bg-gray-900 text-white border-2 border-blue-600 hover:bg-blue-600 rounded px-4 py-2 transition-colors duration-200"
       onClick={addNetwork}
       style={{
         // display: 'flex',

@@ -36,8 +36,8 @@ export default async function RootLayout({
         <GlobalHealthChecker />
         <header className="bg-gray-900 border-b border-gray-800">
           <nav className="container mx-auto px-2 flex items-center justify-between h-14">
-            <Link href="/" className="text-xl font-bold nav-link text-gray-100 hover:text-blue-400 transition-colors">
-              VirBiCoin Mining Pool
+            <Link href="/" className="text-xl font-bold nav-link text-gray-100 hover:text-green-400 transition-colors">
+              VirBiCoin Pool
             </Link>
             <ul className="flex items-center space-x-4">
               <li>

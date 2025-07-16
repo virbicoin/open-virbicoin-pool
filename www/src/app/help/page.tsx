@@ -1,12 +1,16 @@
 import Link from "next/link";
 import MetaMaskButton from '@/components/MetaMaskButton';
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 
 export default function HelpPage() {
   return (
     <div>
       <div className="bg-gray-800 border-b border-gray-700">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-2 text-gray-100">Getting Started</h1>
+          <div className="flex items-center gap-3 mb-4">
+            <QuestionMarkCircleIcon className="w-8 h-8 text-blue-400" />
+            <h1 className="text-3xl font-bold text-gray-100">Getting Started</h1>
+          </div>
           <p className="text-gray-400">
             Follow these simple steps to start mining VirBiCoin with our pool.
           </p>
