@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   assetPrefix: "/",
   allowedDevOrigins: ['localhost', '*.digitalregion.jp'],
   images: {
@@ -13,6 +14,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Production optimizations
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: false,
 };
 
-export default nextConfig;
+export default nextConfig; 
