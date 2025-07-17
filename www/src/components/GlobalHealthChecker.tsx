@@ -40,27 +40,94 @@ const GlobalHealthChecker: React.FC = () => {
         }).format(healthTime);
         console.log('[Health Check] Local Time:', formattedHealthTime);
 
-        // API health check (api.digitalregion.jp)
+        // Global health check - 5つのプールの中で最速のものを選択
         try {
-          const apiStartTime = Date.now();
-          const apiRes = await fetch('https://api.digitalregion.jp/health');
-          const apiEndTime = Date.now();
-          const apiLatency = apiEndTime - apiStartTime;
+          const pools = [
+            'https://pool1.digitalregion.jp/health',
+            'https://pool2.digitalregion.jp/health',
+            'https://pool3.digitalregion.jp/health',
+            'https://pool4.digitalregion.jp/health',
+            'https://pool5.digitalregion.jp/health'
+          ];
+
+          const poolHealthPromises = pools.map(async (poolUrl, index) => {
+            const poolStartTime = Date.now();
+            try {
+              const response = await fetch(poolUrl, {
+                method: 'GET',
+                headers: {
+                  'Accept': 'application/json',
+                  'User-Agent': 'Virbicoin-Pool-GlobalHealth/1.0'
+                },
+                signal: AbortSignal.timeout(5000) // 5秒タイムアウト
+              });
+              
+              const poolEndTime = Date.now();
+              const latency = poolEndTime - poolStartTime;
+              
+              if (!response.ok) {
+                return {
+                  pool: `pool${index + 1}`,
+                  status: 'unhealthy',
+                  latency,
+                  error: `HTTP ${response.status}`
+                };
+              }
+              
+              const data = await response.json();
+              return {
+                pool: `pool${index + 1}`,
+                status: data.status || 'healthy',
+                hostname: data.hostname,
+                time: data.time,
+                latency
+              };
+            } catch (error) {
+              const poolEndTime = Date.now();
+              const latency = poolEndTime - poolStartTime;
+              return {
+                pool: `pool${index + 1}`,
+                status: 'unhealthy',
+                latency,
+                error: error instanceof Error ? error.message : 'Connection failed'
+              };
+            }
+          });
+
+          const poolResults = await Promise.all(poolHealthPromises);
           
-          const apiData = await apiRes.json();
-          console.log('[Health Check] API Health:', apiData.status);
-          console.log('[Health Check] API Hostname:', apiData.hostname);
-          console.log('[Health Check] API Latency:', `${apiLatency}ms`);
-          
-          const apiHealthTime = new Date(apiData.time);
-          const formattedApiHealthTime = new Intl.DateTimeFormat(locale, {
-            dateStyle: 'short',
-            timeStyle: 'long',
-            timeZone,
-          }).format(apiHealthTime);
-          console.log('[Health Check] API Time:', formattedApiHealthTime);
-        } catch (apiError) {
-          console.error('[Health Check] API health check failed:', apiError);
+          // 最速のhealthyプールを選択
+          const healthyPools = poolResults.filter(pool => pool.status === 'healthy');
+          const fastestPool = healthyPools.length > 0 
+            ? healthyPools.reduce((fastest, current) => 
+                current.latency < fastest.latency ? current : fastest
+              )
+            : null;
+
+          if (fastestPool) {
+            console.log('[Health Check] Global Health (Fastest):', fastestPool.status);
+            console.log('[Health Check] Global Hostname:', fastestPool.hostname);
+            console.log('[Health Check] Global Latency:', `${fastestPool.latency}ms`);
+            console.log('[Health Check] Selected Pool:', fastestPool.pool);
+            
+            const globalHealthTime = new Date(fastestPool.time);
+            const formattedGlobalHealthTime = new Intl.DateTimeFormat(locale, {
+              dateStyle: 'short',
+              timeStyle: 'long',
+              timeZone,
+            }).format(globalHealthTime);
+            console.log('[Health Check] Global Time:', formattedGlobalHealthTime);
+          } else {
+            console.error('[Health Check] No healthy pools found');
+          }
+
+          // 全プールの結果をログ出力
+          poolResults.forEach(pool => {
+            console.log(`[Health Check] ${pool.pool}: ${pool.status} (${pool.latency}ms)${pool.error ? ` - ${pool.error}` : ''}`);
+          });
+
+        } catch (globalError) {
+          console.error('[Health Check] Global health check failed:', globalError);
         }
 
       } catch (error) {

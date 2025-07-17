@@ -5,7 +5,7 @@ export async function GET() {
 
   try {
     // 環境変数からベースURLを取得
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://pool.digitalregion.jp';
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.digitalregion.jp';
     const proxyUrl = `${baseUrl}/api/stats`;
 
     const response = await fetch(proxyUrl, {
