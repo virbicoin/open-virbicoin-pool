@@ -61,7 +61,7 @@ export async function GET() {
 
     return NextResponse.json(responseData, { headers });
 
-  } catch (error) {
+  } catch {
     const endTime = Date.now();
     const latency = endTime - startTime;
 

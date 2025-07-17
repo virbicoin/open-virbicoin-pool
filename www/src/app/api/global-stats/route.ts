@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 
+interface PoolStatsData {
+  [key: string]: unknown;
+}
+
 interface GlobalStatsResponse {
   status: 'success' | 'error';
   hostname: string;
   time: string;
   latency: number;
-  data?: any;
+  data?: PoolStatsData;
 }
 
 export async function GET() {
@@ -43,7 +47,7 @@ export async function GET() {
       });
     }
 
-    const data = await response.json();
+    const data = await response.json() as PoolStatsData;
 
     const responseData: GlobalStatsResponse = {
       status: 'success',
@@ -63,7 +67,7 @@ export async function GET() {
 
     return NextResponse.json(responseData, { headers });
 
-  } catch (error) {
+  } catch {
     const endTime = Date.now();
     const latency = endTime - startTime;
 
