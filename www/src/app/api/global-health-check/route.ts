@@ -109,7 +109,7 @@ export async function GET() {
 
     return NextResponse.json(response, { headers });
 
-  } catch (error) {
+  } catch {
     const endTime = Date.now();
     const overallLatency = endTime - startTime;
 

@@ -5,6 +5,13 @@ import { useEffect } from 'react';
 // グローバル変数でヘルスチェック実行状態を管理
 let hasPerformedGlobalHealthCheck = false;
 
+interface PoolHealthData {
+  pool: string;
+  status: string;
+  latency: number;
+  error?: string;
+}
+
 const GlobalHealthChecker: React.FC = () => {
   useEffect(() => {
     // グローバル変数で重複実行を防ぐ
@@ -64,7 +71,7 @@ const GlobalHealthChecker: React.FC = () => {
 
             // 全プールの結果をログ出力
             if (globalData.pools) {
-              globalData.pools.forEach((pool: any) => {
+              globalData.pools.forEach((pool: PoolHealthData) => {
                 console.log(`[Health Check] ${pool.pool}: ${pool.status} (${pool.latency}ms)${pool.error ? ` - ${pool.error}` : ''}`);
               });
             }
