@@ -4,9 +4,8 @@ export async function GET() {
   const startTime = Date.now();
 
   try {
-    // 環境変数からベースURLを取得
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.digitalregion.jp';
-    const proxyUrl = `${baseUrl}/api/stats`;
+    // 実際のプールサーバーからstatsを取得
+    const proxyUrl = 'https://pool.digitalregion.jp/api/stats';
 
     const response = await fetch(proxyUrl, {
       method: 'GET',
