@@ -20,20 +20,51 @@ const GlobalHealthChecker: React.FC = () => {
         const locale = typeof window !== 'undefined' ? navigator.language : 'en-US';
         const timeZone = typeof window !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'UTC';
         
-        const res = await fetch('/health');
-        const data = await res.json();
-        console.log('[Helth Check] Health:', data.status);
-        console.log('[Helth Check] Hostname:', data.hostname);
+        // Local health check (latency measurement)
+        const localStartTime = Date.now();
+        const localRes = await fetch('/health');
+        const localEndTime = Date.now();
+        const localLatency = localEndTime - localStartTime;
+        
+        const localData = await localRes.json();
+        console.log('[Health Check] Local Health:', localData.status);
+        console.log('[Health Check] Local Hostname:', localData.hostname);
+        console.log('[Health Check] Local Latency:', `${localLatency}ms`);
+        
         // 日時をブラウザロケール・タイムゾーンで表示
-        const healthTime = new Date(data.time);
+        const healthTime = new Date(localData.time);
         const formattedHealthTime = new Intl.DateTimeFormat(locale, {
           dateStyle: 'short',
           timeStyle: 'long',
           timeZone,
         }).format(healthTime);
-        console.log('[Helth Check] Time:', formattedHealthTime);
+        console.log('[Health Check] Local Time:', formattedHealthTime);
+
+        // API health check (api.digitalregion.jp)
+        try {
+          const apiStartTime = Date.now();
+          const apiRes = await fetch('https://api.digitalregion.jp/health');
+          const apiEndTime = Date.now();
+          const apiLatency = apiEndTime - apiStartTime;
+          
+          const apiData = await apiRes.json();
+          console.log('[Health Check] API Health:', apiData.status);
+          console.log('[Health Check] API Hostname:', apiData.hostname);
+          console.log('[Health Check] API Latency:', `${apiLatency}ms`);
+          
+          const apiHealthTime = new Date(apiData.time);
+          const formattedApiHealthTime = new Intl.DateTimeFormat(locale, {
+            dateStyle: 'short',
+            timeStyle: 'long',
+            timeZone,
+          }).format(apiHealthTime);
+          console.log('[Health Check] API Time:', formattedApiHealthTime);
+        } catch (apiError) {
+          console.error('[Health Check] API health check failed:', apiError);
+        }
+
       } catch (error) {
-        console.error('[Helth Check] failed:', error);
+        console.error('[Health Check] Local health check failed:', error);
       }
     };
     

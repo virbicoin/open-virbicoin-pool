@@ -76,7 +76,8 @@ export async function GET() {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
-      'X-Proxy-Duration': duration.toString()
+      'X-Proxy-Duration': duration.toString(),
+      'X-Proxy-Latency': duration.toString()
     });
 
     return NextResponse.json(transformedData, { headers });
