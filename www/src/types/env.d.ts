@@ -3,11 +3,9 @@ declare global {
     interface ProcessEnv {
       NEXT_PUBLIC_API_BASE_URL?: string;
       NEXT_PUBLIC_POOL_BASE_URL?: string;
-      NEXT_PUBLIC_POOL1_URL?: string;
-      NEXT_PUBLIC_POOL2_URL?: string;
-      NEXT_PUBLIC_POOL3_URL?: string;
-      NEXT_PUBLIC_POOL4_URL?: string;
-      NEXT_PUBLIC_POOL5_URL?: string;
+      // Dynamic pool URLs (up to 10 pools)
+      [key: `NEXT_PUBLIC_POOL${number}_URL`]: string | undefined;
+      NEXT_PUBLIC_STATS_API_URL?: string;
     }
   }
 }
