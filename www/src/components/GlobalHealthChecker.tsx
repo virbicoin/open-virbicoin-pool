@@ -50,7 +50,7 @@ const GlobalHealthChecker: React.FC = () => {
         // Global health check - サーバーサイドでヘルスチェックを実行
         try {
           const globalStartTime = Date.now();
-          const globalRes = await fetch('/api/global-health-check/');
+          const globalRes = await fetch('/api/global-health-check');
           const globalEndTime = Date.now();
           const globalLatency = globalEndTime - globalStartTime;
           
