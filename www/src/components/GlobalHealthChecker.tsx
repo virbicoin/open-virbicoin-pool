@@ -5,13 +5,6 @@ import { useEffect } from 'react';
 // グローバル変数でヘルスチェック実行状態を管理
 let hasPerformedGlobalHealthCheck = false;
 
-interface PoolHealthData {
-  pool: string;
-  status: string;
-  latency: number;
-  error?: string;
-}
-
 const GlobalHealthChecker: React.FC = () => {
   useEffect(() => {
     // グローバル変数で重複実行を防ぐ
@@ -50,11 +43,26 @@ const GlobalHealthChecker: React.FC = () => {
         // Global health check - 各プールのヘルスチェックを実行
         try {
           const pools = [
-            { name: 'pool1', url: 'https://pool1.digitalregion.jp/health' },
-            { name: 'pool2', url: 'https://pool2.digitalregion.jp/health' },
-            { name: 'pool3', url: 'https://pool3.digitalregion.jp/health' },
-            { name: 'pool4', url: 'https://pool4.digitalregion.jp/health' },
-            { name: 'pool5', url: 'https://pool5.digitalregion.jp/health' },
+            { 
+              name: 'pool1', 
+              url: `${process.env.NEXT_PUBLIC_POOL1_URL || 'https://pool1.digitalregion.jp'}/health` 
+            },
+            { 
+              name: 'pool2', 
+              url: `${process.env.NEXT_PUBLIC_POOL2_URL || 'https://pool2.digitalregion.jp'}/health` 
+            },
+            { 
+              name: 'pool3', 
+              url: `${process.env.NEXT_PUBLIC_POOL3_URL || 'https://pool3.digitalregion.jp'}/health` 
+            },
+            { 
+              name: 'pool4', 
+              url: `${process.env.NEXT_PUBLIC_POOL4_URL || 'https://pool4.digitalregion.jp'}/health` 
+            },
+            { 
+              name: 'pool5', 
+              url: `${process.env.NEXT_PUBLIC_POOL5_URL || 'https://pool5.digitalregion.jp'}/health` 
+            },
           ];
 
           const poolHealthPromises = pools.map(async (pool) => {
