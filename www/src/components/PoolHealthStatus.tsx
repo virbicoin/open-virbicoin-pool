@@ -297,18 +297,12 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 }
 
-// Enable port-level health checks only when explicitly turned on via env.
-// This prevents 404 spam in production environments where the Next.js
-// serverless /api/check-port route is not available (e.g. when the
-// frontend is exported as static files and hosted behind a pure Go
-// backend).
-const ENABLE_PORT_CHECK = typeof process !== 'undefined'
-  ? process.env['NEXT_PUBLIC_ENABLE_PORT_CHECK'] === 'true'
-  : false;
+// Port-level health checks are enabled by default. They can be disabled
+// explicitly by setting NEXT_PUBLIC_DISABLE_PORT_CHECK=true at build time.
+const PORT_CHECK_DISABLED = typeof process !== 'undefined' && process.env['NEXT_PUBLIC_DISABLE_PORT_CHECK'] === 'true';
 
 async function checkStratumPortHealth(host: string, ports: number[]): Promise<Record<number, boolean>> {
-    // Early-exit with undefined (treated as "unknown") when disabled
-    if (!ENABLE_PORT_CHECK) {
+    if (PORT_CHECK_DISABLED) {
         return Object.fromEntries(ports.map((p) => [p, false]));
     }
 
