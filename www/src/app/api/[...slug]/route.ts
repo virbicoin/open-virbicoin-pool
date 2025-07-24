@@ -51,9 +51,9 @@ export async function GET(
 
     const isHealthCheck = apiPath === 'health';
     // プロキシリクエストを送信
-    const proxyUrl: string = slug[0] === 'health'
+    const proxyUrl: string = isHealthCheck
       ? `${baseUrl}/health`
-      : isHealthCheck ? `${baseUrl}/health` : `${baseUrl}/api/${apiPath}`;
+      : `${baseUrl}/api/${apiPath}`;
     console.log(`[Proxy] Fetching: ${proxyUrl}`);
 
     const response = await fetch(proxyUrl, {
