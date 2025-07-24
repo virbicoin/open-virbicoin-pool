@@ -287,8 +287,21 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 }
 
-// Helper to check TCP health of stratum ports via Next.js serverless endpoint
+// Enable port-level health checks only when explicitly turned on via env.
+// This prevents 404 spam in production environments where the Next.js
+// serverless /api/check-port route is not available (e.g. when the
+// frontend is exported as static files and hosted behind a pure Go
+// backend).
+const ENABLE_PORT_CHECK = typeof process !== 'undefined'
+  ? process.env['NEXT_PUBLIC_ENABLE_PORT_CHECK'] === 'true'
+  : false;
+
 async function checkStratumPortHealth(host: string, ports: number[]): Promise<Record<number, boolean>> {
+    // Early-exit with undefined (treated as "unknown") when disabled
+    if (!ENABLE_PORT_CHECK) {
+        return Object.fromEntries(ports.map((p) => [p, false]));
+    }
+
     const results: Record<number, boolean> = {};
     await Promise.all(ports.map(async (port) => {
         try {

@@ -1,4 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+// Import the specific port-check handler so we can delegate when the
+// catch-all route accidentally captures /api/check-port. This avoids 404
+// responses in production where routing precedence can vary between
+// builds.
+import { GET as checkPortGET } from '../check-port/route';
+
+// Ensure this route always executes in the Node.js runtime; the delegated
+// handler uses the "net" module which is Node-only.
+export const runtime = 'nodejs';
 
 // プールエンドポイントのマッピング
 const POOL_ENDPOINTS = {
@@ -27,6 +36,13 @@ export async function GET(
     if (!slug || slug.length === 0) {
       console.error(`[Proxy] Invalid path: ${slug?.join('/') || 'undefined'}`);
       return NextResponse.json({ error: 'Invalid proxy path' }, { status: 400 });
+    }
+
+    // Special-case: if the request is exactly /api/check-port, delegate to the
+    // dedicated handler and return its response early.
+    // We check length === 1 to avoid matching /api/check-port/anything.
+    if (slug && slug.length === 1 && slug[0] === 'check-port') {
+      return checkPortGET(_req);
     }
 
     // Handle /api/health root -> global pool
