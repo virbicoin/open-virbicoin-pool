@@ -11,7 +11,7 @@ const POOL_ENDPOINTS = {
 };
 
 export async function GET(
-  request: NextRequest,
+  _req: NextRequest,
   context: { params: Promise<{ slug: string[] }> }
 ) {
   const startTime = Date.now();
@@ -24,13 +24,23 @@ export async function GET(
 
     console.log(`[Proxy] Request: ${slug?.join('/')}`);
 
-    if (!slug || slug.length < 2) {
+    if (!slug || slug.length === 0) {
       console.error(`[Proxy] Invalid path: ${slug?.join('/') || 'undefined'}`);
       return NextResponse.json({ error: 'Invalid proxy path' }, { status: 400 });
     }
 
-    poolId = slug[0]; // pool1, pool2, pool3, etc.
-    apiPath = slug.slice(1).join('/'); // stats, blocks, etc.
+    // Handle /api/health root -> global pool
+    if (slug[0] === 'health') {
+      poolId = 'pool';
+      apiPath = 'health';
+    } else {
+      poolId = slug[0];
+      apiPath = slug.slice(1).join('/');
+      if (!apiPath) {
+        console.error(`[Proxy] Invalid proxy path: missing sub-path`);
+        return NextResponse.json({ error: 'Invalid proxy path' }, { status: 400 });
+      }
+    }
 
     const baseUrl = POOL_ENDPOINTS[poolId as keyof typeof POOL_ENDPOINTS];
 
@@ -39,18 +49,21 @@ export async function GET(
       return NextResponse.json({ error: 'Unknown pool endpoint' }, { status: 404 });
     }
 
+    const isHealthCheck = apiPath === 'health';
     // プロキシリクエストを送信
-    const proxyUrl = `${baseUrl}/api/${apiPath}`;
+    const proxyUrl: string = slug[0] === 'health'
+      ? `${baseUrl}/health`
+      : isHealthCheck ? `${baseUrl}/health` : `${baseUrl}/api/${apiPath}`;
     console.log(`[Proxy] Fetching: ${proxyUrl}`);
 
     const response = await fetch(proxyUrl, {
-      method: 'GET',
+      method: isHealthCheck ? 'HEAD' : 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Virbicoin-Pool-Frontend/1.0'
       },
-      // Route53のレイテンシベースルーティングにより、ユーザーから最も近いサーバーに接続されるため、統一タイムアウト
-      signal: AbortSignal.timeout(10000) // 10秒
+      // Route53 latency based routing ensures nearest server; 10s timeout
+      signal: AbortSignal.timeout(10000)
     });
 
     const endTime = Date.now();
@@ -66,15 +79,32 @@ export async function GET(
       );
     }
 
-    const data = await response.json();
+    // health エンドポイントはボディなし・HEAD なので即返却
+    let data: unknown;
+    if (isHealthCheck) {
+      data = { status: 'ok' };
+    } else {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch {
+          data = await response.text();
+        }
+      } else {
+        data = await response.text();
+      }
+    }
 
-    // CORSヘッダーを設定
+    // CORS headers
     const headers = new Headers({
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
-      'X-Proxy-Duration': duration.toString()
+      // Duration header for optional debugging
+      'X-Proxy-Duration': duration.toString(),
+      'X-Proxy-Latency': duration.toString()
     });
 
     console.log(`[Proxy] Success: ${proxyUrl} in ${duration}ms`);
@@ -84,7 +114,6 @@ export async function GET(
     const duration = Date.now() - startTime;
     console.error(`[Proxy] Error after ${duration}ms:`, error);
 
-    // 実際のエラー状況を正確に返す（フォールバックなし）
     if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json({ error: 'Request timeout' }, { status: 504 });
     }

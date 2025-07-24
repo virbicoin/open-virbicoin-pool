@@ -48,7 +48,7 @@ function StatCard({ title, value, subtext, className, icon }: StatCardProps) {
 
 export default function AccountPage() {
   const params = useParams();
-  const address = params.address as string;
+  const address = params['address'] as string;
 
   const { data: accountData } = useSWR(address ? API_BASE_URL + `/api/accounts/${address}` : null, fetcher, { refreshInterval: 5000 });
   const { data: statsData } = useSWR(API_BASE_URL + "/api/stats", fetcher, { refreshInterval: 5000 });

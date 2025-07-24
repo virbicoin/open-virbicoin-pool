@@ -16,6 +16,7 @@ interface PoolNode {
 interface PoolHealthData {
     isHealthy: boolean;
     latency?: number;
+    portStatuses?: Record<number, boolean>;
     lastChecked?: number;
 }
 
@@ -60,11 +61,11 @@ const ACTIVE_POOL_NODES: PoolNode[] = [
     },
     {
         url: "stratum1.digitalregion.jp",
-        location: "Western India",
-        flag: "🇮🇳",
-        country: "IN",
+        location: "Singapore",
+        flag: "🇸🇬",
+        country: "SG",
         stratumPorts: [8002, 8004, 8009],
-        region: "South Asia"
+        region: "South East Asia"
     },
     {
         url: "stratum2.digitalregion.jp",
@@ -163,13 +164,16 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 
         // 非アクティブプールは特別処理 - 正確な状態を表示
         const isInactivePool = INACTIVE_POOL_NODES.some(node => node.url === url);
+        const nodeInfo = POOL_NODES.find(n => n.url === url);
+        const simulatedPortStatuses: Record<number, boolean> | undefined = nodeInfo ? Object.fromEntries(
+            nodeInfo.stratumPorts.map(p => [p, !isInactivePool && Math.random() < 0.9])
+        ) : undefined;
+
         if (isInactivePool) {
             await new Promise(resolve => setTimeout(resolve, 1000)); // 1秒待機
-            return {
-                isHealthy: false,
-                latency: undefined,
-                lastChecked: Date.now()
-            };
+            const inactiveObj: PoolHealthData = { isHealthy: false, lastChecked: Date.now() };
+            if (simulatedPortStatuses) inactiveObj.portStatuses = simulatedPortStatuses;
+            return inactiveObj;
         }
 
         // より安定したヘルス状態判定のため、時間ベースでステータスを決定
@@ -186,11 +190,17 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
         const isHealthy = stableRandom < probability;
         const endTime = Date.now();
 
-        return {
+        const baseObj: PoolHealthData = {
             isHealthy,
-            latency: isHealthy ? endTime - startTime : undefined,
             lastChecked: Date.now()
         };
+        if (isHealthy) {
+            baseObj.latency = endTime - startTime;
+        }
+        if (simulatedPortStatuses) {
+            baseObj.portStatuses = simulatedPortStatuses;
+        }
+        return baseObj;
     }
 
     
@@ -198,19 +208,29 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     let fetchUrl: string | undefined;
     
     if (url === 'stratum.digitalregion.jp') {
-        fetchUrl = '/api/stats';
+        // Global pool uses local /health endpoint
+        fetchUrl = '/health';
     } else {
-        // stratum1.digitalregion.jp -> /api/proxy/pool1/stats, etc.
+        // stratum1.digitalregion.jp -> /api/pool1/health, etc.
         const match = url.match(/stratum(\d+)\.digitalregion\.jp/);
         if (match) {
             const poolNumber = match[1];
-            fetchUrl = `/api/pool${poolNumber}/stats`;
+            fetchUrl = `/api/pool${poolNumber}/health`;
         }
     }
     
     if (!fetchUrl) {
         return { isHealthy: false, lastChecked: Date.now() };
     }
+
+    // Pre-start port health check (runs in parallel) for stratum hosts
+    const poolNodeForPorts = POOL_NODES.find(p => p.url === url && p.stratumPorts && url.startsWith('stratum'));
+    let portStatusesPromise: Promise<Record<number, boolean>> | undefined;
+    if (poolNodeForPorts) {
+        portStatusesPromise = checkStratumPortHealth(url, poolNodeForPorts.stratumPorts);
+    }
+
+    let portStatuses: Record<number, boolean> | undefined = undefined;
 
     try {
         // 決定したURLへリクエスト - Route53により最適なサーバーに自動ルーティング
@@ -228,32 +248,66 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
             const data = await response.json();
             // データが有効かチェック
             if (data && typeof data === 'object' && !data.error) {
-                return {
-                    isHealthy: true,
-                    latency,
-                    lastChecked: Date.now()
-                };
+                if (portStatusesPromise) {
+                    portStatuses = await portStatusesPromise;
+                }
+                const successObj: PoolHealthData = { isHealthy: true, latency, lastChecked: Date.now() };
+                if (portStatuses) successObj.portStatuses = portStatuses;
+                return successObj;
             } else {
-                return {
-                    isHealthy: false,
-                    lastChecked: Date.now()
-                };
+                if (portStatusesPromise) {
+                    portStatuses = await portStatusesPromise;
+                }
+                const failObj: PoolHealthData = { isHealthy: false, lastChecked: Date.now() };
+                if (portStatuses) failObj.portStatuses = portStatuses;
+                return failObj;
             }
         }
         
         // レスポンスエラーの場合 - 実際のエラー状態を返す
-        return {
-            isHealthy: false,
-            lastChecked: Date.now()
-        };
+        if (portStatusesPromise) {
+            portStatuses = await portStatusesPromise;
+        }
+        {
+            const errObj: PoolHealthData = { isHealthy: false, lastChecked: Date.now() };
+            if (portStatuses) errObj.portStatuses = portStatuses;
+            return errObj;
+        }
         
     } catch {
         // 接続エラーの場合 - 実際のエラー状態を返す
-        return {
-            isHealthy: false,
-            lastChecked: Date.now()
-        };
+        if (portStatusesPromise) {
+            portStatuses = await portStatusesPromise;
+        }
+        {
+            const errObj: PoolHealthData = { isHealthy: false, lastChecked: Date.now() };
+            if (portStatuses) errObj.portStatuses = portStatuses;
+            return errObj;
+        }
     }
+}
+
+// Helper to check TCP health of stratum ports via Next.js serverless endpoint
+async function checkStratumPortHealth(host: string, ports: number[]): Promise<Record<number, boolean>> {
+    const results: Record<number, boolean> = {};
+    await Promise.all(ports.map(async (port) => {
+        try {
+            const res = await fetch(`/api/check-port?host=${host}&port=${port}`, {
+                method: 'GET',
+                // 5s timeout
+                signal: AbortSignal.timeout(2000),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                results[port] = !!data.healthy;
+            } else {
+                results[port] = false;
+            }
+        } catch {
+            results[port] = false;
+        }
+    }));
+    return results;
 }
 
 export default function PoolHealthStatus({ className = "" }: PoolHealthStatusProps) {
@@ -333,9 +387,22 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
     const activeHealthChecks = healthChecks.filter(check =>
         ACTIVE_POOL_NODES.some(node => node.url === check.url)
     );
-    const healthyCount = activeHealthChecks.filter(check => check.healthData.isHealthy).length;
-    const totalCount = activeHealthChecks.length;
-    const healthPercentage = totalCount > 0 ? (healthyCount / totalCount) * 100 : 0;
+    // Pool-level health counts (API endpoint)
+    const healthyPoolCount = activeHealthChecks.filter(check => check.healthData.isHealthy).length;
+    const totalPoolCount = activeHealthChecks.length;
+
+    // Port-level health counts
+    const totalPortCount = activeHealthChecks.reduce((sum, pool) => sum + pool.stratumPorts.length, 0);
+    const healthyPortCount = activeHealthChecks.reduce((sum, pool) => {
+        const statuses = pool.healthData.portStatuses;
+        if (!statuses) return sum; // 未取得の場合は0とみなす
+        return sum + pool.stratumPorts.filter(port => statuses[port]).length;
+    }, 0);
+
+    // Global health includes both API (pool) と 各 stratum port
+    const globalHealthy = healthyPoolCount + healthyPortCount;
+    const globalTotal = totalPoolCount + totalPortCount;
+    const healthPercentage = globalTotal > 0 ? (globalHealthy / globalTotal) * 100 : 0;
 
     return (
         <div className={`bg-gray-800 rounded-lg border border-gray-700 p-6 ${className}`}>
@@ -343,24 +410,24 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                 <div className="flex items-center gap-4">
                     <div className="relative">
                         <ServerIcon className="w-8 h-8 text-green-400" />
-                        {healthyCount === totalCount && (
+                        {globalHealthy === globalTotal && (
                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                         )}
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-gray-300">Pool Health Status</h3>
                         <p className="text-sm text-gray-400">
-                            {healthyCount}/{totalCount} pools online • {healthPercentage.toFixed(0)}% uptime
+                            {healthyPoolCount}/{totalPoolCount} pools online • {healthPercentage.toFixed(0)}% uptime
                         </p>
                     </div>
                 </div>
 
                 {/* 全体ステータスインジケーター */}
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${healthyCount === totalCount ? 'bg-green-400/20 text-green-400' :
-                    healthyCount > 0 ? 'bg-yellow-400/20 text-yellow-400' : 'bg-red-400/20 text-red-400'
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${globalHealthy === globalTotal ? 'bg-green-400/20 text-green-400' :
+                    globalHealthy > 0 ? 'bg-yellow-400/20 text-yellow-400' : 'bg-red-400/20 text-red-400'
                     }`}>
-                    {healthyCount === totalCount ? 'Operational' :
-                        healthyCount > 0 ? 'Degraded' : 'Down'}
+                    {globalHealthy === globalTotal ? 'Operational' :
+                        globalHealthy > 0 ? 'Degraded' : 'Down'}
                 </div>
             </div>
 
@@ -443,14 +510,18 @@ export default function PoolHealthStatus({ className = "" }: PoolHealthStatusPro
                                             {INACTIVE_POOL_NODES.some(node => node.url === pool.url) ? (
                                                 <span className="text-gray-500 font-medium text-xs">---</span>
                                             ) : (
-                                                pool.stratumPorts.map((port, portIndex) => (
-                                                    <span 
-                                                        key={portIndex}
-                                                        className="bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded text-xs font-medium"
-                                                    >
-                                                        {port}
-                                                    </span>
-                                                ))
+                                                pool.stratumPorts.map((port, portIndex) => {
+                                                    const portHealthy = pool.healthData.portStatuses ? pool.healthData.portStatuses[port] : undefined;
+                                                    const badgeClass = portHealthy === undefined ? 'bg-blue-500/20 text-blue-400' : portHealthy ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400';
+                                                    return (
+                                                        <span
+                                                            key={portIndex}
+                                                            className={`${badgeClass} px-1.5 py-0.5 rounded text-xs font-medium`}
+                                                        >
+                                                            {port}
+                                                        </span>
+                                                    );
+                                                })
                                             )}
                                         </div>
                                     </div>
