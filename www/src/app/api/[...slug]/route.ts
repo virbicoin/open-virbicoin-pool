@@ -57,7 +57,9 @@ export async function GET(
     console.log(`[Proxy] Fetching: ${proxyUrl}`);
 
     const response = await fetch(proxyUrl, {
-      method: isHealthCheck ? 'HEAD' : 'GET',
+      // Always use GET for health so that upstream servers that don't
+      // implement HEAD still respond with 200.
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
         'User-Agent': 'Virbicoin-Pool-Frontend/1.0'
@@ -79,21 +81,21 @@ export async function GET(
       );
     }
 
-    // health エンドポイントはボディなし・HEAD なので即返却
+    // Try to parse JSON if possible, otherwise return text
     let data: unknown;
-    if (isHealthCheck) {
-      data = { status: 'ok' };
-    } else {
-      const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        try {
-          data = await response.json();
-        } catch {
-          data = await response.text();
-        }
-      } else {
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      try {
+        data = await response.json();
+      } catch {
         data = await response.text();
       }
+    } else if (contentType.startsWith('text/')) {
+      data = await response.text();
+    } else {
+      // For health endpoints that may not return a body, return a default object
+      data = { status: 'ok' };
     }
 
     // CORS headers
