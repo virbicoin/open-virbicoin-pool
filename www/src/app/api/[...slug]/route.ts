@@ -33,6 +33,32 @@ export async function GET(
     if (slug[0] === 'health') {
       poolId = 'pool';
       apiPath = 'health';
+    } else if (slug[0] === 'check-port') {
+      // Handle check-port API - this doesn't need a pool ID, just proxy to the www domain
+      const queryString = _req.url.split('?')[1] || '';
+      const checkPortUrl = `${process.env.NEXT_PUBLIC_WWW_BASE_URL || 'https://digitalregion.jp'}/api/check-port${queryString ? '?' + queryString : ''}`;
+      
+      console.log(`[Proxy] Check-port request: ${checkPortUrl}`);
+      
+      const response = await fetch(checkPortUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Virbicoin-Pool-Frontend/1.0'
+        },
+        signal: AbortSignal.timeout(5000) // 5s timeout for port checks
+      });
+
+      const data = await response.json();
+      
+      return NextResponse.json(data, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+        }
+      });
     } else {
       poolId = slug[0];
       apiPath = slug.slice(1).join('/');

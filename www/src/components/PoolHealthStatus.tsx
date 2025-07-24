@@ -290,9 +290,13 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
 // Helper to check TCP health of stratum ports via Next.js serverless endpoint
 async function checkStratumPortHealth(host: string, ports: number[]): Promise<Record<number, boolean>> {
     const results: Record<number, boolean> = {};
+    
+    // Use environment variable for the base URL, or fallback to relative path
+    const baseUrl = process.env.NEXT_PUBLIC_WWW_BASE_URL || '';
+    
     await Promise.all(ports.map(async (port) => {
         try {
-            const res = await fetch(`/api/check-port?host=${host}&port=${port}`, {
+            const res = await fetch(`${baseUrl}/api/check-port?host=${host}&port=${port}`, {
                 method: 'GET',
                 // 5s timeout
                 signal: AbortSignal.timeout(2000),

@@ -10,6 +10,7 @@ Copy `env.example` to `.env.local` and configure the following environment varia
 # API Endpoints
 NEXT_PUBLIC_API_BASE_URL=https://api.digitalregion.jp
 NEXT_PUBLIC_POOL_BASE_URL=https://pool.digitalregion.jp
+NEXT_PUBLIC_WWW_BASE_URL=https://digitalregion.jp
 
 # Pool Health Check URLs (Dynamic - up to 10 pools)
 NEXT_PUBLIC_POOL1_URL=https://pool1.digitalregion.jp
@@ -24,6 +25,7 @@ NEXT_PUBLIC_POOL5_URL=https://pool5.digitalregion.jp
 
 - `NEXT_PUBLIC_API_BASE_URL`: Base URL for the API server
 - `NEXT_PUBLIC_POOL_BASE_URL`: Base URL for the pool server
+- `NEXT_PUBLIC_WWW_BASE_URL`: Base URL for the main website (used for check-port API)
 - `NEXT_PUBLIC_POOL1_URL` to `NEXT_PUBLIC_POOL10_URL`: URLs for individual pool health checks (dynamic, up to 10 pools)
 
 ## Development
