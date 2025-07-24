@@ -204,18 +204,28 @@ async function checkPoolHealth(url: string): Promise<PoolHealthData> {
     }
 
     
-    // リクエストパス決定: 常にNext.jsのAPIプロキシを使用
+    // リクエストパス決定: 実行環境に応じてローカル API プロキシか直接 URL を使用
+    const runningOnLocalhost = typeof window !== 'undefined' && (
+        window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    );
+
+    // SSR（typeof window === 'undefined'）や localhost 開発時はプロキシを使用。
+    // それ以外 (本番ブラウザ) ではプールサーバーへ直接アクセス。
+    const useProxy = typeof window === 'undefined' || runningOnLocalhost;
+
     let fetchUrl: string | undefined;
-    
+
     if (url === 'stratum.digitalregion.jp') {
-        // Global pool uses local /health endpoint
-        fetchUrl = '/health';
+        // Global pool
+        fetchUrl = useProxy ? '/health' : 'https://pool.digitalregion.jp/health';
     } else {
-        // stratum1.digitalregion.jp -> /api/pool1/health, etc.
+        // stratum1.digitalregion.jp -> pool1 etc.
         const match = url.match(/stratum(\d+)\.digitalregion\.jp/);
         if (match) {
             const poolNumber = match[1];
-            fetchUrl = `/api/pool${poolNumber}/health`;
+            fetchUrl = useProxy
+                ? `/api/pool${poolNumber}/health`
+                : `https://pool${poolNumber}.digitalregion.jp/health`;
         }
     }
     
