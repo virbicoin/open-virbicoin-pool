@@ -95,7 +95,7 @@ func NewRedisClient(cfg *Config, prefix string) *RedisClient {
 			MasterName:    cfg.MasterName,
 			SentinelAddrs: cfg.SentinelAddrs,
 			Password:      cfg.Password,
-			DB:            int(cfg.Database),
+			DB:            cfg.Database,
 			PoolSize:      cfg.PoolSize,
 			MaxRetries:    -1,
 		})
