@@ -13,10 +13,15 @@ import (
 )
 
 type Config struct {
-	Endpoint string `json:"endpoint"`
-	Password string `json:"password"`
-	Database int64  `json:"database"`
-	PoolSize int    `json:"poolSize"`
+	Endpoint      string   `json:"endpoint"`
+	Password      string   `json:"password"`
+	Database      int64    `json:"database"`
+	PoolSize      int      `json:"poolSize"`
+	SentinelAddrs []string `json:"sentinelAddrs"`
+	MasterName    string   `json:"masterName"`
+	// TLS settings
+	TLS           bool     `json:"tls"`
+	TLSSkipVerify bool     `json:"tlsSkipVerify"`
 }
 
 type RedisClient struct {
