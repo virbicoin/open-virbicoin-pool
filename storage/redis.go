@@ -17,6 +17,13 @@ type Config struct {
 	Password string `json:"password"`
 	Database int64  `json:"database"`
 	PoolSize int    `json:"poolSize"`
+
+	// Sentinel support (optional). If SentinelAddrs is non-empty, the client
+	// will connect using redis.FailoverClient instead of a single-node
+	// redis.Client. MasterName must match the name used in sentinel.conf
+	// "sentinel monitor <masterName> host port quorum".
+	SentinelAddrs []string `json:"sentinelAddrs"`
+	MasterName    string   `json:"masterName"`
 }
 
 type RedisClient struct {
@@ -80,13 +87,30 @@ type Worker struct {
 
 func NewRedisClient(cfg *Config, prefix string) *RedisClient {
 
-	client := redis.NewClient(&redis.Options{
-		Addr:       cfg.Endpoint,
-		Password:   cfg.Password,
-		DB:         cfg.Database,
-		PoolSize:   cfg.PoolSize,
-		MaxRetries: -1, // retry indefinitely
-	})
+	var client *redis.Client
+
+	// Prefer Sentinel when addresses are provided.
+	if len(cfg.SentinelAddrs) > 0 && cfg.MasterName != "" {
+		client = redis.NewFailoverClient(&redis.FailoverOptions{
+			MasterName:    cfg.MasterName,
+			SentinelAddrs: cfg.SentinelAddrs,
+			Password:      cfg.Password,
+			DB:            int(cfg.Database),
+			PoolSize:      cfg.PoolSize,
+			MaxRetries:    -1,
+		})
+		fmt.Printf("[Redis] Connecting via Sentinel to master '%s' (%v)\n", cfg.MasterName, cfg.SentinelAddrs)
+	} else {
+		// Fallback to single endpoint mode.
+		client = redis.NewClient(&redis.Options{
+			Addr:       cfg.Endpoint,
+			Password:   cfg.Password,
+			DB:         cfg.Database,
+			PoolSize:   cfg.PoolSize,
+			MaxRetries: -1, // retry indefinitely
+		})
+		fmt.Printf("[Redis] Connecting directly to %s\n", cfg.Endpoint)
+	}
 
 	// Verify initial connectivity (non-fatal)
 	if _, err := client.Ping().Result(); err != nil {
