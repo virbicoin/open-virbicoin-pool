@@ -75,6 +75,9 @@
 
 	"redis": {
 		"endpoint": "127.0.0.1:6379",
+		"masterName": "",
+		"sentinelAddrs": [],
+		"sentinelPassword": "",
 		"poolSize": 10,
 		"database": 0,
 		"password": ""

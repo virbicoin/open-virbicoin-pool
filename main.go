@@ -4,12 +4,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/yvasiyarov/gorelic"
 
@@ -18,6 +18,22 @@ import (
 	"github.com/virbicoin/open-virbicoin-pool/proxy"
 	"github.com/virbicoin/open-virbicoin-pool/storage"
 )
+
+// Version information (set by build flags)
+var (
+	Version   = "dev"
+	Commit    = "unknown"
+	BuildTime = "unknown"
+)
+
+// printVersion displays version information
+func printVersion() {
+	fmt.Printf("Open Virbicoin Pool %s\n", Version)
+	fmt.Printf("Commit: %s\n", Commit)
+	fmt.Printf("Build Time: %s\n", BuildTime)
+	fmt.Printf("Go Version: %s\n", runtime.Version())
+	fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+}
 
 var cfg proxy.Config
 var backend *storage.RedisClient
@@ -43,12 +59,14 @@ func startPayoutsProcessor() {
 }
 
 func startNewrelic() {
-	if cfg.NewrelicEnabled {
+	if len(cfg.NewrelicKey) > 0 {
 		nr := gorelic.NewAgent()
 		nr.Verbose = cfg.NewrelicVerbose
 		nr.NewrelicLicense = cfg.NewrelicKey
 		nr.NewrelicName = cfg.NewrelicName
-		nr.Run()
+		if err := nr.Run(); err != nil {
+			log.Printf("Failed to start New Relic agent: %v", err)
+		}
 	}
 }
 
@@ -57,7 +75,9 @@ func readConfig(cfg *proxy.Config) {
 	if len(os.Args) > 1 {
 		configFileName = os.Args[1]
 	}
-	configFileName, _ = filepath.Abs(configFileName)
+	if absPath, err := filepath.Abs(configFileName); err == nil {
+		configFileName = absPath
+	}
 	log.Printf("Loading config: %v", configFileName)
 
 	configFile, err := os.Open(configFileName)
@@ -72,8 +92,18 @@ func readConfig(cfg *proxy.Config) {
 }
 
 func main() {
+	// Parse command line flags
+	var showVersion = flag.Bool("version", false, "Show version information")
+	flag.Parse()
+	
+	if *showVersion {
+		printVersion()
+		os.Exit(0)
+	}
+
 	readConfig(&cfg)
-	rand.Seed(time.Now().UnixNano())
+	// Note: rand.Seed is deprecated in Go 1.20+. The default random generator is now automatically seeded.
+	// If specific seeding is needed, use rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if cfg.Threads > 0 {
 		runtime.GOMAXPROCS(cfg.Threads)

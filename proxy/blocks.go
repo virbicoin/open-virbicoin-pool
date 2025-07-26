@@ -5,12 +5,11 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"sync"
-
-	"github.com/ethereum/go-ethereum/common"
 
 	"github.com/virbicoin/open-virbicoin-pool/rpc"
 	"github.com/virbicoin/open-virbicoin-pool/util"
+
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const maxBacklog = 3
@@ -21,14 +20,12 @@ type heightDiffPair struct {
 }
 
 type BlockTemplate struct {
-	sync.RWMutex
 	Header               string
 	Seed                 string
 	Target               string
 	Difficulty           *big.Int
 	Height               uint64
 	GetPendingBlockCache *rpc.GetBlockReplyPart
-	nonces               map[string]bool
 	headers              map[string]heightDiffPair
 }
 

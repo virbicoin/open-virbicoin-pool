@@ -82,41 +82,32 @@ func NewProxy(cfg *Config, backend *storage.RedisClient) *ProxyServer {
 	stateUpdateTimer := time.NewTimer(stateUpdateIntv)
 
 	go func() {
-		for {
-			select {
-			case <-refreshTimer.C:
-				proxy.fetchBlockTemplate()
-				refreshTimer.Reset(refreshIntv)
-			}
+		for range refreshTimer.C {
+			proxy.fetchBlockTemplate()
+			refreshTimer.Reset(refreshIntv)
 		}
 	}()
 
 	go func() {
-		for {
-			select {
-			case <-checkTimer.C:
-				proxy.checkUpstreams()
-				checkTimer.Reset(checkIntv)
-			}
+		for range checkTimer.C {
+			proxy.checkUpstreams()
+			checkTimer.Reset(checkIntv)
 		}
 	}()
 
 	go func() {
-		for {
-			select {
-			case <-stateUpdateTimer.C:
-				t := proxy.currentBlockTemplate()
-				if t != nil {
-					err := backend.WriteNodeState(cfg.Name, t.Height, t.Difficulty)
-					if err != nil {
-						log.Printf("Failed to write node state to backend: %v", err)
-						proxy.markSick()
-					} else {
-						proxy.markOk()
-					}
+		for range stateUpdateTimer.C {
+			t := proxy.currentBlockTemplate()
+			if t != nil {
+				err := backend.WriteNodeState(cfg.Name, t.Height, t.Difficulty)
+				if err != nil {
+					log.Printf("Failed to write node state to backend: %v", err)
+					proxy.markSick()
+				} else {
+					proxy.markOk()
 				}
-				stateUpdateTimer.Reset(stateUpdateIntv)
 			}
+			stateUpdateTimer.Reset(stateUpdateIntv)
 		}
 	}()
 
@@ -220,12 +211,16 @@ func (cs *Session) handleMessage(s *ProxyServer, r *http.Request, req *JSONRpcRe
 
 	if !util.IsValidHexAddress(login) {
 		errReply := &ErrorReply{Code: -1, Message: "Invalid login"}
-		cs.sendError(req.Id, errReply)
+		if err := cs.sendError(req.Id, errReply); err != nil {
+			log.Printf("Failed to send error response: %v", err)
+		}
 		return
 	}
 	if !s.policy.ApplyLoginPolicy(login, cs.ip) {
 		errReply := &ErrorReply{Code: -1, Message: "You are blacklisted"}
-		cs.sendError(req.Id, errReply)
+		if err := cs.sendError(req.Id, errReply); err != nil {
+			log.Printf("Failed to send error response: %v", err)
+		}
 		return
 	}
 
@@ -234,10 +229,14 @@ func (cs *Session) handleMessage(s *ProxyServer, r *http.Request, req *JSONRpcRe
 	case "eth_getWork":
 		reply, errReply := s.handleGetWorkRPC(cs)
 		if errReply != nil {
-			cs.sendError(req.Id, errReply)
+			if err := cs.sendError(req.Id, errReply); err != nil {
+				log.Printf("Failed to send error response: %v", err)
+			}
 			break
 		}
-		cs.sendResult(req.Id, &reply)
+		if err := cs.sendResult(req.Id, &reply); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	case "eth_submitWork":
 		if req.Params != nil {
 			var params []string
@@ -249,23 +248,35 @@ func (cs *Session) handleMessage(s *ProxyServer, r *http.Request, req *JSONRpcRe
 			}
 			reply, errReply := s.handleSubmitRPC(cs, login, vars["id"], params)
 			if errReply != nil {
-				cs.sendError(req.Id, errReply)
+				if err := cs.sendError(req.Id, errReply); err != nil {
+					log.Printf("Failed to send error response: %v", err)
+				}
 				break
 			}
-			cs.sendResult(req.Id, &reply)
+			if err := cs.sendResult(req.Id, &reply); err != nil {
+				log.Printf("Failed to send result: %v", err)
+			}
 		} else {
 			s.policy.ApplyMalformedPolicy(cs.ip)
 			errReply := &ErrorReply{Code: -1, Message: "Malformed request"}
-			cs.sendError(req.Id, errReply)
+			if err := cs.sendError(req.Id, errReply); err != nil {
+				log.Printf("Failed to send error response: %v", err)
+			}
 		}
 	case "eth_getBlockByNumber":
 		reply := s.handleGetBlockByNumberRPC()
-		cs.sendResult(req.Id, reply)
+		if err := cs.sendResult(req.Id, reply); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	case "eth_submitHashrate":
-		cs.sendResult(req.Id, true)
+		if err := cs.sendResult(req.Id, true); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	default:
 		errReply := s.handleUnknownRPC(cs, req.Method)
-		cs.sendError(req.Id, errReply)
+		if err := cs.sendError(req.Id, errReply); err != nil {
+			log.Printf("Failed to send error response: %v", err)
+		}
 	}
 }
 

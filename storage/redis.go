@@ -17,11 +17,21 @@ type Config struct {
 	Password string `json:"password"`
 	Database int64  `json:"database"`
 	PoolSize int    `json:"poolSize"`
+
+	// Sentinel support (optional). If SentinelAddrs is non-empty, the client
+	// will connect using redis.FailoverClient instead of a single-node
+	// redis.Client. MasterName must match the name used in sentinel.conf
+	// "sentinel monitor <masterName> host port quorum".
+	SentinelAddrs    []string `json:"sentinelAddrs"`
+	MasterName       string   `json:"masterName"`
+	SentinelPassword string   `json:"sentinelPassword"` // Add Sentinel password support
+	Username         string   `json:"username"`         // Add username for Redis 6.0+ ACL
 }
 
 type RedisClient struct {
 	client *redis.Client
 	prefix string
+	actualPassword string // Track the actual working password
 }
 
 type BlockData struct {
@@ -79,22 +89,131 @@ type Worker struct {
 }
 
 func NewRedisClient(cfg *Config, prefix string) *RedisClient {
+	var client *redis.Client
+	var err error
+	var actualPassword string = cfg.Password // Start with configured password
 
-	client := redis.NewClient(&redis.Options{
-		Addr:       cfg.Endpoint,
-		Password:   cfg.Password,
-		DB:         cfg.Database,
-		PoolSize:   cfg.PoolSize,
-		MaxRetries: -1, // retry indefinitely
-	})
+	// Prefer Sentinel when addresses are provided.
+	if len(cfg.SentinelAddrs) > 0 && cfg.MasterName != "" {
+		fmt.Printf("[Redis] Attempting Sentinel connection to master '%s' (%v)\n", cfg.MasterName, cfg.SentinelAddrs)
+		
+		// Try Sentinel connection with retry logic
+		for attempt := 1; attempt <= 3; attempt++ {
+			client = redis.NewFailoverClient(&redis.FailoverOptions{
+				MasterName:    cfg.MasterName,
+				SentinelAddrs: cfg.SentinelAddrs,
+				Password:      actualPassword,
+				DB:            cfg.Database,
+				PoolSize:      cfg.PoolSize,
+				MaxRetries:    3,
+				DialTimeout:   5 * time.Second,
+				ReadTimeout:   3 * time.Second,
+				WriteTimeout:  3 * time.Second,
+			})
 
-	// Verify initial connectivity (non-fatal)
-	if _, err := client.Ping().Result(); err != nil {
-		fmt.Printf("[Redis] Initial ping failed: %v\n", err)
-	} else {
-		fmt.Println("[Redis] Connected")
+			// Test connection
+			_, err = client.Ping().Result()
+			if err == nil {
+				fmt.Println("[Redis] Connected via Sentinel")
+				break
+			}
+
+			fmt.Printf("[Redis] Sentinel connection attempt %d failed: %v\n", attempt, err)
+			
+			// Check if password error
+			if strings.Contains(err.Error(), "AUTH") || strings.Contains(err.Error(), "NOAUTH") {
+				fmt.Println("[Redis] Password authentication error detected, retrying without password...")
+				actualPassword = "" // Clear password
+				client = redis.NewFailoverClient(&redis.FailoverOptions{
+					MasterName:    cfg.MasterName,
+					SentinelAddrs: cfg.SentinelAddrs,
+					Password:      actualPassword, // Try without password
+					DB:            cfg.Database,
+					PoolSize:      cfg.PoolSize,
+					MaxRetries:    3,
+					DialTimeout:   5 * time.Second,
+					ReadTimeout:   3 * time.Second,
+					WriteTimeout:  3 * time.Second,
+				})
+				_, err = client.Ping().Result()
+				if err == nil {
+					fmt.Println("[Redis] Connected via Sentinel without password")
+					break
+				}
+				actualPassword = cfg.Password // Restore password for next attempt
+			}
+
+			if attempt < 3 {
+				time.Sleep(time.Duration(attempt) * time.Second)
+			}
+		}
+
+		// If Sentinel fails and we have endpoint, fallback to direct connection
+		if err != nil && cfg.Endpoint != "" {
+			fmt.Printf("[Redis] Sentinel connection failed, falling back to direct connection: %s\n", cfg.Endpoint)
+			client = nil // Reset client
+		}
 	}
-	return &RedisClient{client: client, prefix: prefix}
+
+	// Direct connection mode (or fallback from Sentinel)
+	if client == nil && cfg.Endpoint != "" {
+		fmt.Printf("[Redis] Connecting directly to %s\n", cfg.Endpoint)
+		
+		// Try direct connection with retry logic
+		for attempt := 1; attempt <= 3; attempt++ {
+			client = redis.NewClient(&redis.Options{
+				Addr:         cfg.Endpoint,
+				Password:     actualPassword,
+				DB:           cfg.Database,
+				PoolSize:     cfg.PoolSize,
+				MaxRetries:   3,
+				DialTimeout:  5 * time.Second,
+				ReadTimeout:  3 * time.Second,
+				WriteTimeout: 3 * time.Second,
+			})
+
+			// Test connection
+			_, err = client.Ping().Result()
+			if err == nil {
+				fmt.Println("[Redis] Connected directly")
+				break
+			}
+
+			fmt.Printf("[Redis] Direct connection attempt %d failed: %v\n", attempt, err)
+			
+			// Check if password error
+			if strings.Contains(err.Error(), "AUTH") || strings.Contains(err.Error(), "NOAUTH") {
+				fmt.Println("[Redis] Password authentication error detected, retrying without password...")
+				actualPassword = "" // Clear password
+				client = redis.NewClient(&redis.Options{
+					Addr:         cfg.Endpoint,
+					Password:     actualPassword, // Try without password
+					DB:           cfg.Database,
+					PoolSize:     cfg.PoolSize,
+					MaxRetries:   3,
+					DialTimeout:  5 * time.Second,
+					ReadTimeout:  3 * time.Second,
+					WriteTimeout: 3 * time.Second,
+				})
+				_, err = client.Ping().Result()
+				if err == nil {
+					fmt.Println("[Redis] Connected directly without password")
+					break
+				}
+				actualPassword = cfg.Password // Restore password for next attempt
+			}
+
+			if attempt < 3 {
+				time.Sleep(time.Duration(attempt) * time.Second)
+			}
+		}
+	}
+
+	if client == nil {
+		panic("Failed to connect to Redis")
+	}
+
+	return &RedisClient{client: client, prefix: prefix, actualPassword: actualPassword}
 }
 
 func (r *RedisClient) Client() *redis.Client {
@@ -133,13 +252,29 @@ func (r *RedisClient) WriteNodeState(id string, height uint64, diff *big.Int) er
 
 	now := util.MakeTimestamp() / 1000
 
-	_, err := tx.Exec(func() error {
-		tx.HSet(r.formatKey("nodes"), join(id, "name"), id)
-		tx.HSet(r.formatKey("nodes"), join(id, "height"), strconv.FormatUint(height, 10))
-		tx.HSet(r.formatKey("nodes"), join(id, "difficulty"), diff.String())
-		tx.HSet(r.formatKey("nodes"), join(id, "lastBeat"), strconv.FormatInt(now, 10))
-		return nil
-	})
+	// Retry logic for transient errors
+	var err error
+	for attempt := 0; attempt < 3; attempt++ {
+		_, err = tx.Exec(func() error {
+			tx.HSet(r.formatKey("nodes"), join(id, "name"), id)
+			tx.HSet(r.formatKey("nodes"), join(id, "height"), strconv.FormatUint(height, 10))
+			tx.HSet(r.formatKey("nodes"), join(id, "difficulty"), diff.String())
+			tx.HSet(r.formatKey("nodes"), join(id, "lastBeat"), strconv.FormatInt(now, 10))
+			return nil
+		})
+		
+		if err == nil {
+			return nil
+		}
+		
+		// Log error but don't reconnect - let Redis client handle reconnections
+		if attempt < 2 {
+			fmt.Printf("[Redis] WriteNodeState error on attempt %d: %v, retrying...\n", attempt+1, err)
+			time.Sleep(time.Duration(attempt+1) * time.Second)
+			tx = r.client.Multi() // Create new transaction
+		}
+	}
+	
 	return err
 }
 
@@ -159,7 +294,7 @@ func (r *RedisClient) GetNodeStates() ([]map[string]interface{}, error) {
 			m[parts[0]] = node
 		}
 	}
-	v := make([]map[string]interface{}, len(m), len(m))
+	v := make([]map[string]interface{}, len(m))
 	i := 0
 	for _, value := range m {
 		v[i] = value
@@ -258,25 +393,24 @@ func (r *RedisClient) formatRound(height int64, nonce string) string {
 func join(args ...interface{}) string {
 	s := make([]string, len(args))
 	for i, v := range args {
-		switch v.(type) {
+		switch val := v.(type) {
 		case string:
-			s[i] = v.(string)
+			s[i] = val
 		case int64:
-			s[i] = strconv.FormatInt(v.(int64), 10)
+			s[i] = strconv.FormatInt(val, 10)
 		case uint64:
-			s[i] = strconv.FormatUint(v.(uint64), 10)
+			s[i] = strconv.FormatUint(val, 10)
 		case float64:
-			s[i] = strconv.FormatFloat(v.(float64), 'f', 0, 64)
+			s[i] = strconv.FormatFloat(val, 'f', 0, 64)
 		case bool:
-			if v.(bool) {
+			if val {
 				s[i] = "1"
 			} else {
 				s[i] = "0"
 			}
 		case *big.Int:
-			n := v.(*big.Int)
-			if n != nil {
-				s[i] = n.String()
+			if val != nil {
+				s[i] = val.String()
 			} else {
 				s[i] = "0"
 			}
@@ -339,7 +473,7 @@ func (r *RedisClient) GetPayees() ([]string, error) {
 			break
 		}
 	}
-	for login, _ := range payees {
+	for login := range payees {
 		result = append(result, login)
 	}
 	return result, nil
