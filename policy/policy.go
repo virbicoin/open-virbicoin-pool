@@ -106,11 +106,8 @@ func Start(cfg *Config, storage *storage.RedisClient) *PolicyServer {
 
 func (s *PolicyServer) startPolicyWorker() {
 	go func() {
-		for {
-			select {
-			case ip := <-s.banChannel:
-				s.doBan(ip)
-			}
+		for ip := range s.banChannel {
+			s.doBan(ip)
 		}
 	}()
 }

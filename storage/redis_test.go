@@ -55,7 +55,11 @@ func TestGetPayees(t *testing.T) {
 	}
 
 	var payees []string
-	payees, _ = r.GetPayees()
+	var err error
+	payees, err = r.GetPayees()
+	if err != nil {
+		t.Errorf("Failed to get payees: %v", err)
+	}
 	if len(payees) != n {
 		t.Error("Must return all payees")
 	}
