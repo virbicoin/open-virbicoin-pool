@@ -473,7 +473,7 @@ func (r *RedisClient) GetPayees() ([]string, error) {
 			break
 		}
 	}
-	for login, _ := range payees {
+	for login := range payees {
 		result = append(result, login)
 	}
 	return result, nil

@@ -459,7 +459,7 @@ func (u *BlockUnlocker) calculateRewards(block *storage.BlockData) (*big.Rat, *b
 	}
 
 	if u.config.Donate {
-		var donation = new(big.Rat)
+		donation := new(big.Rat)
 		poolProfit, donation = chargeFee(poolProfit, donationFee)
 		login := strings.ToLower(donationAccount)
 		rewards[login] += weiToShannonInt64(donation)

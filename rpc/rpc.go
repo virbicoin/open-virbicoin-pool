@@ -235,9 +235,17 @@ func (r *RPCClient) SendTransaction(from, to, gas, gasPrice, value string, autoG
 
 func (r *RPCClient) doPost(url string, method string, params interface{}) (*JSONRpcResp, error) {
 	jsonReq := map[string]interface{}{"jsonrpc": "2.0", "method": method, "params": params, "id": 0}
-	data, _ := json.Marshal(jsonReq)
+	data, err := json.Marshal(jsonReq)
+	if err != nil {
+		r.markSick()
+		return nil, err
+	}
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(data))
+	if err != nil {
+		r.markSick()
+		return nil, err
+	}
 	req.Header.Set("Content-Length", (string)(len(data)))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
