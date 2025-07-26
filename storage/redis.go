@@ -172,23 +172,46 @@ func (r *RedisClient) GetNodeStates() ([]map[string]interface{}, error) {
 func (r *RedisClient) checkPoWExist(height uint64, params []string) (bool, error) {
 	powKey := r.formatKey("pow")
 	shareKey := strings.Join(params, ":")
+	fullKey := powKey + ":" + shareKey
 	
-	// Simple approach: check if share exists, then add it
-	exists, err := r.client.Exists(powKey + ":" + shareKey).Result()
+	// Debug: Log the exact key being checked
+	log.Printf("DEBUG checkPoWExist: Checking key '%s' for height %d", fullKey, height)
+	
+	// Check if share exists using EXISTS command
+	existsResult, err := r.client.Exists(fullKey).Result()
 	if err != nil {
-		log.Printf("Error checking PoW existence: %v", err)
+		log.Printf("ERROR checking PoW existence for key '%s': %v", fullKey, err)
 		return false, err
 	}
 	
+	// Debug: Log EXISTS result details
+	log.Printf("DEBUG checkPoWExist: EXISTS result for '%s' = %d", fullKey, existsResult)
+	
+	// EXISTS returns 1 if key exists, 0 if not
+	exists := existsResult > 0
+	
 	if exists {
-		log.Printf("Duplicate PoW found: %s (key exists)", shareKey)
-		return true, nil
+		// Additional verification: try to GET the value to confirm it really exists
+		getValue, getErr := r.client.Get(fullKey).Result()
+		if getErr != nil && getErr != redis.Nil {
+			log.Printf("WARNING: EXISTS=1 but GET failed for '%s': %v", fullKey, getErr)
+			// In case of uncertainty, treat as not existing to avoid blocking blocks
+			exists = false
+		} else if getErr == redis.Nil {
+			log.Printf("WARNING: EXISTS=1 but GET=nil for '%s' - treating as not existing", fullKey)
+			exists = false
+		} else {
+			log.Printf("DUPLICATE PoW confirmed: key '%s' exists with value '%s'", fullKey, getValue)
+			return true, nil
+		}
 	}
 	
+	log.Printf("DEBUG checkPoWExist: Key '%s' does not exist, adding new PoW", fullKey)
+	
 	// Add new share with expiration (10 minutes)
-	err = r.client.Set(powKey + ":" + shareKey, height, 600*time.Second).Err()
+	err = r.client.Set(fullKey, strconv.FormatUint(height, 10), 600*time.Second).Err()
 	if err != nil {
-		log.Printf("Error storing new PoW: %v", err)
+		log.Printf("ERROR storing new PoW for key '%s': %v", fullKey, err)
 		return false, err
 	}
 	

@@ -32,7 +32,7 @@ func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, param
 	}
 	shareDiff := s.config.Proxy.Difficulty
 
-	log.Printf("Processing share from %v@%v: nonce=%v, hashNoNonce=%v, mixDigest=%v", 
+	log.Printf("=== PROCESSING SHARE === from %v@%v: nonce=%v, hashNoNonce=%v, mixDigest=%v", 
 		login, ip, nonceHex, hashNoNonce, mixDigest)
 
 	h, ok := t.headers[hashNoNonce]
@@ -70,8 +70,12 @@ func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, param
 	log.Printf("Share verification SUCCESS for %v@%v: nonce=%v, height=%d", 
 		login, ip, nonceHex, h.height)
 
+	// Debug: Log block difficulty comparison
+	log.Printf("Block verification check for %v@%v: blockDiff=%v, shareDiff=%d", 
+		login, ip, h.diff, shareDiff)
+
 	if hasher.Verify(block) {
-		log.Printf("Block candidate found by %v@%v at height %d!", login, ip, h.height)
+		log.Printf("!!! BLOCK VERIFIED !!! Block candidate found by %v@%v at height %d!", login, ip, h.height)
 		ok, err := s.rpc().SubmitBlock(params)
 		if err != nil {
 			log.Printf("Block submission failure at height %v for %v: %v", h.height, t.Header, err)
@@ -79,6 +83,7 @@ func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, param
 			log.Printf("Block rejected at height %v for %v", h.height, t.Header)
 			return false, false
 		} else {
+			log.Printf("!!! BLOCK ACCEPTED BY NETWORK !!! at height %d", h.height)
 			s.fetchBlockTemplate()
 			exist, err := s.backend.WriteBlock(login, id, params, shareDiff, h.diff.Int64(), h.height, s.hashrateExpiration)
 			if exist {
@@ -90,9 +95,12 @@ func (s *ProxyServer) processShare(login, id, ip string, t *BlockTemplate, param
 			} else {
 				log.Printf("Inserted block %v to backend", h.height)
 			}
-			log.Printf("Block found by miner %v@%v at height %d", login, ip, h.height)
+			log.Printf("!!! BLOCK FOUND BY MINER !!! %v@%v at height %d", login, ip, h.height)
 		}
 	} else {
+		// Debug: Log why block verification failed
+		log.Printf("Block verification FAILED for %v@%v: nonce=%v, height=%d, blockDiff=%v (share passed but block failed)", 
+			login, ip, nonceHex, h.height, h.diff)
 		exist, err := s.backend.WriteShare(login, id, params, shareDiff, h.height, s.hashrateExpiration)
 		if exist {
 			log.Printf("Duplicate share detected for %v@%v: nonce=%v", login, ip, nonceHex)

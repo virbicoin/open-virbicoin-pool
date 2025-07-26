@@ -80,7 +80,9 @@ func (s *ProxyServer) fetchBlockTemplate() {
 		diff:   util.TargetHexToDiff(reply[2]),
 		height: height,
 	}
+	previousHeaderCount := 0
 	if t != nil {
+		previousHeaderCount = len(t.headers)
 		for k, v := range t.headers {
 			if v.height > height-maxBacklog {
 				newTemplate.headers[k] = v
