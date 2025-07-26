@@ -90,6 +90,15 @@ func main() {
 		log.Printf("Backend check reply: %v", pong)
 	}
 
+	// Clear PoW cache to prevent duplicate share issues from previous runs
+	log.Printf("Clearing PoW cache...")
+	err = backend.ClearPoWCache()
+	if err != nil {
+		log.Printf("Warning: Failed to clear PoW cache: %v", err)
+	} else {
+		log.Printf("PoW cache cleared successfully")
+	}
+
 	if cfg.Proxy.Enabled {
 		go startProxy()
 	}

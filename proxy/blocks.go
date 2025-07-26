@@ -13,7 +13,7 @@ import (
 	"github.com/virbicoin/open-virbicoin-pool/util"
 )
 
-const maxBacklog = 3
+const maxBacklog = 8
 
 type heightDiffPair struct {
 	diff   *big.Int
@@ -88,7 +88,8 @@ func (s *ProxyServer) fetchBlockTemplate() {
 		}
 	}
 	s.blockTemplate.Store(&newTemplate)
-	log.Printf("New block to mine on %s at height %d / %s", rpc.Name, height, reply[0][0:10])
+	log.Printf("New block template on %s at height %d / %s - Headers: %d->%d (backlog=%d)", 
+		rpc.Name, height, reply[0][0:10], previousHeaderCount, len(newTemplate.headers), maxBacklog)
 
 	// Stratum
 	if s.config.Proxy.Stratum.Enabled {

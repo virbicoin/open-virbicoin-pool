@@ -2,6 +2,7 @@ package storage
 
 import (
 	"fmt"
+	"log"
 	"math/big"
 	"strconv"
 	"strings"
@@ -169,10 +170,30 @@ func (r *RedisClient) GetNodeStates() ([]map[string]interface{}, error) {
 }
 
 func (r *RedisClient) checkPoWExist(height uint64, params []string) (bool, error) {
-	// Sweep PoW backlog for previous blocks, we have 3 templates back in RAM
-	r.client.ZRemRangeByScore(r.formatKey("pow"), "-inf", fmt.Sprint("(", height-8))
-	val, err := r.client.ZAdd(r.formatKey("pow"), redis.Z{Score: float64(height), Member: strings.Join(params, ":")}).Result()
-	return val == 0, err
+	powKey := r.formatKey("pow")
+	shareKey := strings.Join(params, ":")
+	
+	// Simple approach: check if share exists, then add it
+	exists, err := r.client.Exists(powKey + ":" + shareKey).Result()
+	if err != nil {
+		log.Printf("Error checking PoW existence: %v", err)
+		return false, err
+	}
+	
+	if exists {
+		log.Printf("Duplicate PoW found: %s (key exists)", shareKey)
+		return true, nil
+	}
+	
+	// Add new share with expiration (10 minutes)
+	err = r.client.Set(powKey + ":" + shareKey, height, 600*time.Second).Err()
+	if err != nil {
+		log.Printf("Error storing new PoW: %v", err)
+		return false, err
+	}
+	
+	log.Printf("Added new PoW: %s at height %d", shareKey, height)
+	return false, nil
 }
 
 func (r *RedisClient) WriteShare(login, id string, params []string, diff int64, height uint64, window time.Duration) (bool, error) {
@@ -965,4 +986,44 @@ func convertPaymentsResults(raw *redis.ZSliceCmd) []map[string]interface{} {
 		result = append(result, tx)
 	}
 	return result
+}
+
+func (r *RedisClient) ClearPoWCache() error {
+	// Get all keys matching the pattern
+	pattern := r.formatKey("pow*")
+	keys, err := r.client.Keys(pattern).Result()
+	if err != nil {
+		log.Printf("Error getting PoW keys: %v", err)
+		return err
+	}
+
+	log.Printf("Found %d PoW keys to delete: %v", len(keys), keys)
+
+	if len(keys) > 0 {
+		count, err := r.client.Del(keys...).Result()
+		if err != nil {
+			log.Printf("Error deleting PoW keys: %v", err)
+			return err
+		}
+		log.Printf("Deleted %d PoW keys", count)
+	}
+
+	// Also delete the main pow key directly
+	powKey := r.formatKey("pow")
+	count, err := r.client.Del(powKey).Result()
+	if err != nil {
+		log.Printf("Error deleting main PoW key: %v", err)
+		return err
+	}
+	log.Printf("Cleared main PoW cache: %d entries removed", count)
+
+	// Verify it's gone
+	exists, err := r.client.Exists(powKey).Result()
+	if err != nil {
+		log.Printf("Error checking PoW key existence: %v", err)
+	} else {
+		log.Printf("PoW key exists after deletion: %v", exists)
+	}
+
+	return nil
 }
