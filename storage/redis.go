@@ -278,12 +278,6 @@ func (r *RedisClient) WriteNodeState(id string, height uint64, diff *big.Int) er
 	return err
 }
 
-// Simplified check method - just return ping result
-func (r *RedisClient) checkAndReconnect() error {
-	_, err := r.client.Ping().Result()
-	return err
-}
-
 func (r *RedisClient) GetNodeStates() ([]map[string]interface{}, error) {
 	cmd := r.client.HGetAllMap(r.formatKey("nodes"))
 	if cmd.Err() != nil {

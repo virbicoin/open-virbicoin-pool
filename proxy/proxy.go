@@ -234,10 +234,14 @@ func (cs *Session) handleMessage(s *ProxyServer, r *http.Request, req *JSONRpcRe
 	case "eth_getWork":
 		reply, errReply := s.handleGetWorkRPC(cs)
 		if errReply != nil {
-			cs.sendError(req.Id, errReply)
+			if err := cs.sendError(req.Id, errReply); err != nil {
+				log.Printf("Failed to send error response: %v", err)
+			}
 			break
 		}
-		cs.sendResult(req.Id, &reply)
+		if err := cs.sendResult(req.Id, &reply); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	case "eth_submitWork":
 		if req.Params != nil {
 			var params []string
@@ -249,23 +253,35 @@ func (cs *Session) handleMessage(s *ProxyServer, r *http.Request, req *JSONRpcRe
 			}
 			reply, errReply := s.handleSubmitRPC(cs, login, vars["id"], params)
 			if errReply != nil {
-				cs.sendError(req.Id, errReply)
+				if err := cs.sendError(req.Id, errReply); err != nil {
+					log.Printf("Failed to send error response: %v", err)
+				}
 				break
 			}
-			cs.sendResult(req.Id, &reply)
+			if err := cs.sendResult(req.Id, &reply); err != nil {
+				log.Printf("Failed to send result: %v", err)
+			}
 		} else {
 			s.policy.ApplyMalformedPolicy(cs.ip)
 			errReply := &ErrorReply{Code: -1, Message: "Malformed request"}
-			cs.sendError(req.Id, errReply)
+			if err := cs.sendError(req.Id, errReply); err != nil {
+				log.Printf("Failed to send error response: %v", err)
+			}
 		}
 	case "eth_getBlockByNumber":
 		reply := s.handleGetBlockByNumberRPC()
-		cs.sendResult(req.Id, reply)
+		if err := cs.sendResult(req.Id, reply); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	case "eth_submitHashrate":
-		cs.sendResult(req.Id, true)
+		if err := cs.sendResult(req.Id, true); err != nil {
+			log.Printf("Failed to send result: %v", err)
+		}
 	default:
 		errReply := s.handleUnknownRPC(cs, req.Method)
-		cs.sendError(req.Id, errReply)
+		if err := cs.sendError(req.Id, errReply); err != nil {
+			log.Printf("Failed to send error response: %v", err)
+		}
 	}
 }
 

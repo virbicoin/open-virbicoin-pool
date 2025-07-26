@@ -7,11 +7,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
-	"time"
 
 	"github.com/yvasiyarov/gorelic"
 
@@ -61,12 +59,14 @@ func startPayoutsProcessor() {
 }
 
 func startNewrelic() {
-	if cfg.NewrelicEnabled {
+	if len(cfg.NewrelicKey) > 0 {
 		nr := gorelic.NewAgent()
 		nr.Verbose = cfg.NewrelicVerbose
 		nr.NewrelicLicense = cfg.NewrelicKey
 		nr.NewrelicName = cfg.NewrelicName
-		nr.Run()
+		if err := nr.Run(); err != nil {
+			log.Printf("Failed to start New Relic agent: %v", err)
+		}
 	}
 }
 
@@ -100,7 +100,8 @@ func main() {
 	}
 
 	readConfig(&cfg)
-	rand.Seed(time.Now().UnixNano())
+	// Note: rand.Seed is deprecated in Go 1.20+. The default random generator is now automatically seeded.
+	// If specific seeding is needed, use rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	if cfg.Threads > 0 {
 		runtime.GOMAXPROCS(cfg.Threads)

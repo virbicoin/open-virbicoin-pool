@@ -39,7 +39,9 @@ func (s *ProxyServer) ListenTCP() {
 		if err != nil {
 			continue
 		}
-		conn.SetKeepAlive(true)
+		if err := conn.SetKeepAlive(true); err != nil {
+			log.Printf("Failed to set keep alive: %v", err)
+		}
 
 		ip, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
 
@@ -170,7 +172,9 @@ func (cs *Session) sendTCPError(id json.RawMessage, reply *ErrorReply) error {
 }
 
 func (self *ProxyServer) setDeadline(conn *net.TCPConn) {
-	conn.SetDeadline(time.Now().Add(self.timeout))
+	if err := conn.SetDeadline(time.Now().Add(self.timeout)); err != nil {
+		log.Printf("Failed to set deadline: %v", err)
+	}
 }
 
 func (s *ProxyServer) registerSession(cs *Session) {
