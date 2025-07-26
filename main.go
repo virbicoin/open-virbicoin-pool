@@ -4,6 +4,8 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -18,6 +20,22 @@ import (
 	"github.com/virbicoin/open-virbicoin-pool/proxy"
 	"github.com/virbicoin/open-virbicoin-pool/storage"
 )
+
+// Version information (set by build flags)
+var (
+	Version   = "dev"
+	Commit    = "unknown"
+	BuildTime = "unknown"
+)
+
+// printVersion displays version information
+func printVersion() {
+	fmt.Printf("Open Virbicoin Pool %s\n", Version)
+	fmt.Printf("Commit: %s\n", Commit)
+	fmt.Printf("Build Time: %s\n", BuildTime)
+	fmt.Printf("Go Version: %s\n", runtime.Version())
+	fmt.Printf("OS/Arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
+}
 
 var cfg proxy.Config
 var backend *storage.RedisClient
@@ -72,6 +90,15 @@ func readConfig(cfg *proxy.Config) {
 }
 
 func main() {
+	// Parse command line flags
+	var showVersion = flag.Bool("version", false, "Show version information")
+	flag.Parse()
+	
+	if *showVersion {
+		printVersion()
+		os.Exit(0)
+	}
+
 	readConfig(&cfg)
 	rand.Seed(time.Now().UnixNano())
 

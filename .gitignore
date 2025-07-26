@@ -1,9 +1,11 @@
 .DS_Store
 testnet.json
 open-ethereum-pool
-
+build/
 /build/_workspace/
 /build/bin/
 open*pool
 config.json
 *.log
+dist/
+releases/
