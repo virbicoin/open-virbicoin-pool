@@ -150,6 +150,10 @@ release-linux: clean
 # Run tests
 test:
 	@echo "Running tests..."
+	@if ! nc -z localhost 6379 2>/dev/null; then \
+		echo "Warning: Redis not running on localhost:6379"; \
+		echo "Some tests may fail. Start Redis with: redis-server redis-test.conf"; \
+	fi
 	$(GO) test -v ./...
 
 # Clean build artifacts
@@ -200,7 +204,10 @@ help:
 	@echo "  release-linux      - Build optimized binaries for Linux (AMD64 and ARM64)"
 	@echo "  release-arm64      - Build optimized binary for Linux ARM64"
 	@echo "  release-optimized  - Build optimized binary for current platform"
-	@echo "  test               - Run tests"
+	@echo "  test               - Run tests (requires Redis on localhost:6379)"
+	@echo "  test-with-redis    - Start Redis, run tests, stop Redis"
+	@echo "  redis-start        - Start Redis server for testing"
+	@echo "  redis-stop         - Stop Redis server"
 	@echo "  clean              - Clean build artifacts"
 	@echo "  docker             - Build Docker image"
 	@echo "  deps               - Download dependencies"
@@ -209,3 +216,21 @@ help:
 	@echo "  install            - Install binary to system"
 	@echo "  version            - Show version information"
 	@echo "  help               - Show this help" 
+
+# Start Redis for testing
+redis-start:
+	@echo "Starting Redis for testing..."
+	@if command -v redis-server >/dev/null 2>&1; then \
+		redis-server redis-test.conf --daemonize yes; \
+		echo "Redis started on port 6379"; \
+	else \
+		echo "Redis not installed. Install with: sudo apt-get install redis-server"; \
+	fi
+
+# Stop Redis
+redis-stop:
+	@echo "Stopping Redis..."
+	@pkill redis-server 2>/dev/null || echo "Redis was not running"
+
+# Test with Redis
+test-with-redis: redis-start test redis-stop 
