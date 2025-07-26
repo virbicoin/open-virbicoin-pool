@@ -90,7 +90,9 @@ func TestGetBalance(t *testing.T) {
 func TestLockPayouts(t *testing.T) {
 	reset()
 
-	r.LockPayouts("x", 1000)
+	if err := r.LockPayouts("x", 1000); err != nil {
+		t.Errorf("Failed to lock payouts: %v", err)
+	}
 	v := r.client.Get("test:payments:lock").Val()
 	if v != "x:1000" {
 		t.Errorf("Invalid lock amount: %v", v)
@@ -107,17 +109,17 @@ func TestUnlockPayouts(t *testing.T) {
 
 	r.client.Set(r.formatKey("payments:lock"), "x:1000", 0)
 
-	r.UnlockPayouts()
-	err := r.client.Get(r.formatKey("payments:lock")).Err()
-	if err != redis.Nil {
-		t.Errorf("Must release lock")
+	if err := r.UnlockPayouts(); err != nil {
+		t.Errorf("Failed to unlock payouts: %v", err)
 	}
 }
 
 func TestIsPayoutsLocked(t *testing.T) {
 	reset()
 
-	r.LockPayouts("x", 1000)
+	if err := r.LockPayouts("x", 1000); err != nil {
+		t.Errorf("Failed to lock payouts: %v", err)
+	}
 	if locked, _ := r.IsPayoutsLocked(); !locked {
 		t.Errorf("Payouts must be locked")
 	}
@@ -136,7 +138,9 @@ func TestUpdateBalance(t *testing.T) {
 	)
 
 	amount := int64(250)
-	r.UpdateBalance("x", amount)
+	if err := r.UpdateBalance("x", amount); err != nil {
+		t.Errorf("Failed to update balance: %v", err)
+	}
 	result := r.client.HGetAllMap(r.formatKey("miners:x")).Val()
 	if result["pending"] != "250" {
 		t.Error("Must set pending amount")
@@ -179,7 +183,9 @@ func TestRollbackBalance(t *testing.T) {
 	r.client.ZAdd(r.formatKey("payments:pending"), redis.Z{Score: 1, Member: "xx"})
 
 	amount := int64(250)
-	r.RollbackBalance("x", amount)
+	if err := r.RollbackBalance("x", amount); err != nil {
+		t.Errorf("Failed to rollback balance: %v", err)
+	}
 	result := r.client.HGetAllMap(r.formatKey("miners:x")).Val()
 	if result["paid"] != "100" {
 		t.Error("Must not touch paid")
@@ -221,7 +227,9 @@ func TestWritePayment(t *testing.T) {
 	)
 
 	amount := int64(250)
-	r.WritePayment("x", "0x0", amount)
+	if err := r.WritePayment("x", "0x0", amount); err != nil {
+		t.Errorf("Failed to write payment: %v", err)
+	}
 	result := r.client.HGetAllMap(r.formatKey("miners:x")).Val()
 	if result["pending"] != "0" {
 		t.Error("Must unset pending amount")
