@@ -75,7 +75,9 @@ func readConfig(cfg *proxy.Config) {
 	if len(os.Args) > 1 {
 		configFileName = os.Args[1]
 	}
-	configFileName, _ = filepath.Abs(configFileName)
+	if absPath, err := filepath.Abs(configFileName); err == nil {
+		configFileName = absPath
+	}
 	log.Printf("Loading config: %v", configFileName)
 
 	configFile, err := os.Open(configFileName)

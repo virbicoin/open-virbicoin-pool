@@ -280,7 +280,9 @@ func TestGetPendingPayments(t *testing.T) {
 	)
 
 	amount := int64(1000)
-	r.UpdateBalance("x", amount)
+	if err := r.UpdateBalance("x", amount); err != nil {
+		t.Errorf("Failed to update balance: %v", err)
+	}
 	pending := r.GetPendingPayments()
 
 	if len(pending) != 1 {

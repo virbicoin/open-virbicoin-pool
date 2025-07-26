@@ -294,7 +294,7 @@ func (r *RedisClient) GetNodeStates() ([]map[string]interface{}, error) {
 			m[parts[0]] = node
 		}
 	}
-	v := make([]map[string]interface{}, len(m), len(m))
+	v := make([]map[string]interface{}, len(m))
 	i := 0
 	for _, value := range m {
 		v[i] = value
