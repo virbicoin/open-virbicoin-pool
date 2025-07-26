@@ -180,8 +180,14 @@ fmt:
 
 # Lint code
 lint:
-	@echo "Linting code..."
-	golangci-lint run
+	@echo "Running golangci-lint..."
+	@if command -v golangci-lint >/dev/null 2>&1; then \
+		golangci-lint run --out-format=colored-line-number; \
+	else \
+		echo "golangci-lint not found. Installing..."; \
+		go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest; \
+		golangci-lint run --out-format=colored-line-number; \
+	fi
 
 # Show version
 version:
@@ -205,17 +211,19 @@ help:
 	@echo "  release-arm64      - Build optimized binary for Linux ARM64"
 	@echo "  release-optimized  - Build optimized binary for current platform"
 	@echo "  test               - Run tests (requires Redis on localhost:6379)"
+	@echo "  test-all           - Run lint checks and tests"
 	@echo "  test-with-redis    - Start Redis, run tests, stop Redis"
+	@echo "  test-with-redis-lint - Run lint checks, start Redis, run tests, stop Redis"
 	@echo "  redis-start        - Start Redis server for testing"
 	@echo "  redis-stop         - Stop Redis server"
 	@echo "  clean              - Clean build artifacts"
 	@echo "  docker             - Build Docker image"
 	@echo "  deps               - Download dependencies"
 	@echo "  fmt                - Format code"
-	@echo "  lint               - Run linter"
+	@echo "  lint               - Run linter (golangci-lint)"
 	@echo "  install            - Install binary to system"
 	@echo "  version            - Show version information"
-	@echo "  help               - Show this help" 
+	@echo "  help               - Show this help"
 
 # Start Redis for testing
 redis-start:
@@ -234,3 +242,9 @@ redis-stop:
 
 # Test with Redis
 test-with-redis: redis-start test redis-stop 
+
+# Run tests with lint check
+test-all: lint test
+
+# Test with Redis and lint
+test-with-redis-lint: lint test-with-redis 

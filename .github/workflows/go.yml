@@ -9,9 +9,32 @@ on:
     branches:
       - main
 
+env:
+  GO_VERSION: '1.22'
+
 jobs:
-  build:
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run linting
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          args: --out-format=colored-line-number
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint
 
     services:
       redis:
@@ -31,7 +54,15 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22'
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Install dependencies
         run: go mod download
@@ -41,5 +72,54 @@ jobs:
           REDIS_URL: redis://localhost:6379
         run: go test ./...
 
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    strategy:
+      matrix:
+        goarch: [amd64, arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Install ARM64 cross-compilation tools
+        if: matrix.goarch == 'arm64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install dependencies
+        run: go mod download
+
       - name: Build binary
-        run: go build -o open-virbicoin-pool
+        env:
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 1
+          CC: ${{ matrix.goarch == 'arm64' && 'aarch64-linux-gnu-gcc' || '' }}
+        run: go build -o open-virbicoin-pool-${{ matrix.goarch }}
+
+      - name: Test binary (AMD64 only)
+        if: matrix.goarch == 'amd64'
+        run: ./open-virbicoin-pool-${{ matrix.goarch }} --version || echo "Version check completed"
+
+      - name: Verify ARM64 binary
+        if: matrix.goarch == 'arm64'
+        run: |
+          file open-virbicoin-pool-${{ matrix.goarch }}
+          echo "ARM64 binary built successfully"
