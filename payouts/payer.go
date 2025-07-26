@@ -113,7 +113,11 @@ func (u *PayoutsProcessor) process() {
 	}
 
 	for _, login := range payees {
-		amount, _ := u.backend.GetBalance(login)
+		amount, err := u.backend.GetBalance(login)
+		if err != nil {
+			log.Printf("Error while retrieving balance for %s: %v", login, err)
+			continue
+		}
 		amountInShannon := big.NewInt(amount)
 
 		// Shannon^2 = Wei

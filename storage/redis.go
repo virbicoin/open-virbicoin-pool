@@ -393,25 +393,24 @@ func (r *RedisClient) formatRound(height int64, nonce string) string {
 func join(args ...interface{}) string {
 	s := make([]string, len(args))
 	for i, v := range args {
-		switch v.(type) {
+		switch val := v.(type) {
 		case string:
-			s[i] = v.(string)
+			s[i] = val
 		case int64:
-			s[i] = strconv.FormatInt(v.(int64), 10)
+			s[i] = strconv.FormatInt(val, 10)
 		case uint64:
-			s[i] = strconv.FormatUint(v.(uint64), 10)
+			s[i] = strconv.FormatUint(val, 10)
 		case float64:
-			s[i] = strconv.FormatFloat(v.(float64), 'f', 0, 64)
+			s[i] = strconv.FormatFloat(val, 'f', 0, 64)
 		case bool:
-			if v.(bool) {
+			if val {
 				s[i] = "1"
 			} else {
 				s[i] = "0"
 			}
 		case *big.Int:
-			n := v.(*big.Int)
-			if n != nil {
-				s[i] = n.String()
+			if val != nil {
+				s[i] = val.String()
 			} else {
 				s[i] = "0"
 			}
