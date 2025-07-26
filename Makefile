@@ -43,9 +43,9 @@ build:
 	@mkdir -p $(DIST_DIR)
 	CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME) .
 
-# Multi-platform release target
+# Multi-platform release target (Linux only due to CGO requirements for ethash)
 release: clean
-	@echo "Building multi-platform release..."
+	@echo "Building Linux multi-arch release..."
 	@mkdir -p $(RELEASE_DIR)
 	
 	# Linux AMD64
