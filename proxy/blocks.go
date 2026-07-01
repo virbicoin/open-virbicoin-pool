@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"errors"
 	"log"
 	"math/big"
 	"strconv"
@@ -100,10 +101,27 @@ func (s *ProxyServer) fetchPendingBlock() (*rpc.GetBlockReplyPart, uint64, int64
 		log.Printf("Error while refreshing pending block on %s: %s", rpc.Name, err)
 		return nil, 0, 0, err
 	}
-	blockNumber, err := strconv.ParseUint(strings.Replace(reply.Number, "0x", "", -1), 16, 64)
-	if err != nil {
-		log.Println("Can't parse pending block number")
-		return nil, 0, 0, err
+	if reply == nil {
+		return nil, 0, 0, errors.New("pending block is empty")
+	}
+	// OpenEthereum-based clients (e.g. open-virbicoin) return null for a pending
+	// block's number per the JSON-RPC spec, so reply.Number is empty. In that case
+	// fall back to the latest block height + 1 (Gvbc returns the number, so it keeps
+	// working as before).
+	var blockNumber uint64
+	if reply.Number == "" {
+		latest, err := rpc.GetBlockNumber()
+		if err != nil {
+			log.Printf("Error while fetching latest block number on %s: %s", rpc.Name, err)
+			return nil, 0, 0, err
+		}
+		blockNumber = latest + 1
+	} else {
+		blockNumber, err = strconv.ParseUint(strings.Replace(reply.Number, "0x", "", -1), 16, 64)
+		if err != nil {
+			log.Println("Can't parse pending block number")
+			return nil, 0, 0, err
+		}
 	}
 	blockDiff, err := strconv.ParseInt(strings.Replace(reply.Difficulty, "0x", "", -1), 16, 64)
 	if err != nil {

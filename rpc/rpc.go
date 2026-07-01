@@ -110,6 +110,43 @@ func (r *RPCClient) GetPendingBlock() (*GetBlockReplyPart, error) {
 	return nil, nil
 }
 
+// GetBlockNumber returns the latest block height via eth_blockNumber.
+// It is used as a height fallback for OpenEthereum-based clients (e.g. open-virbicoin),
+// which return null for a pending block's number per the JSON-RPC spec.
+func (r *RPCClient) GetBlockNumber() (uint64, error) {
+	rpcResp, err := r.doPost(r.Url, "eth_blockNumber", []string{})
+	if err != nil {
+		return 0, err
+	}
+	var reply string
+	err = json.Unmarshal(*rpcResp.Result, &reply)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseUint(strings.Replace(reply, "0x", "", -1), 16, 64)
+}
+
+// GetPendingBlockNumber returns the pending block height (number).
+// For clients that return null for a pending block's number (e.g. open-virbicoin),
+// it falls back to the latest block height + 1.
+func (r *RPCClient) GetPendingBlockNumber() (int64, error) {
+	reply, err := r.GetPendingBlock()
+	if err != nil {
+		return 0, err
+	}
+	if reply == nil {
+		return 0, errors.New("pending block is empty")
+	}
+	if reply.Number == "" {
+		latest, err := r.GetBlockNumber()
+		if err != nil {
+			return 0, err
+		}
+		return int64(latest) + 1, nil
+	}
+	return strconv.ParseInt(strings.Replace(reply.Number, "0x", "", -1), 16, 64)
+}
+
 func (r *RPCClient) GetBlockByHeight(height int64) (*GetBlockReply, error) {
 	params := []interface{}{fmt.Sprintf("0x%x", height), true}
 	return r.getBlockBy("eth_getBlockByNumber", params)

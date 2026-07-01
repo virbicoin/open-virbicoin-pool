@@ -26,6 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### OpenEthereum-Based Client (Ovbc) Compatibility - July 2, 2026
+
+- **Pending Block Number Fallback**: Pool no longer fails to get the blockchain height from
+  OpenEthereum-based clients (e.g. [open-virbicoin](https://github.com/virbicoin/open-virbicoin)/Ovbc),
+  which return `null` for a pending block's number per the JSON-RPC spec
+  - New `GetBlockNumber()` (`eth_blockNumber`) and `GetPendingBlockNumber()` RPC helpers:
+    when the pending block number is missing, they fall back to the latest block height + 1
+  - Proxy block polling (`fetchPendingBlock`) applies the same fallback inline without an
+    extra RPC round-trip
+  - Block unlocker now uses `GetPendingBlockNumber()` instead of manual hex parsing and no
+    longer dereferences a nil pending-block reply (previously a potential panic)
 - Faucet statistics showing negative "Total Sent" value (-9.18674407 VBC) due to int64 overflow
 
 #### Internationalization (i18n) - January 11, 2026
