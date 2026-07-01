@@ -61,7 +61,7 @@
 Dependencies:
 
   * go >= 1.9 (version 1.22.12 works for me)
-  * gvbc or parity-virbicoin
+  * gvbc or ovbc (open-virbicoin)
   * redis-server >= 2.8.0
   * nodejs >= 16 LTS
   * nginx
@@ -433,9 +433,9 @@ I recommend this deployment strategy:
 * Don't run payouts and unlocker modules as part of mining node. Create separate configs for both, launch independently and make sure you have a single instance of each module running.
 * If `poolFeeAddress` is not specified all pool profit will remain on coinbase address. If it specified, make sure to periodically send some dust back required for payments.
 
-### Alternative Ethereum Implementations
+### Alternative VirBiCoin Implementations
 
-This pool is tested to work with [Ethcore's Parity](https://github.com/ethcore/parity). Mining and block unlocking works, but I am not sure about payouts and suggest to run *official* geth node for payments.
+This pool supports [open-virbicoin (Ovbc)](https://github.com/virbicoin/open-virbicoin), the OpenEthereum-based Rust client, as an upstream node. OpenEthereum-based clients return `null` for a pending block's number per the JSON-RPC spec; in that case the pool automatically falls back to the latest block height + 1. Mining and block unlocking are supported, but payouts against Ovbc are not battle-tested yet — running the payouts module against a Gvbc ([go-virbicoin](https://github.com/virbicoin/go-virbicoin)) node is recommended.
 
 ### Credits
 
