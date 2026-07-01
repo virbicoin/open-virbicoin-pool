@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/btcsuite/btcd/btcec/v2 v2.5.0 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/garyburd/redigo v1.6.4 // indirect
 	github.com/onsi/ginkgo v1.16.5 // indirect

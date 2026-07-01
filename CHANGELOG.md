@@ -26,6 +26,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+#### ARM64 / CGO-Free Build Fix - July 2, 2026
+
+- **btcec Downgrade**: `go build` failed on hosts without a C toolchain (e.g. ARM64 VPS)
+  because a bulk dependency update pulled `btcsuite/btcd/btcec/v2 v2.5.0`, whose
+  `SignCompact` API is incompatible with go-ethereum 1.10.x's CGO-free signer
+  (`signature_nocgo.go`). Pinned back to v2.2.0, the version go-ethereum 1.10.x expects
+- **CGO_ENABLED=0 Everywhere**: Makefile and CI/release workflows now build with
+  `CGO_ENABLED=0` (the pool is pure Go since the ethash removal), so the CGO-free code
+  path is exercised in CI and cross-compilation no longer needs a C toolchain
+
 #### OpenEthereum-Based Client (Ovbc) Compatibility - July 2, 2026
 
 - **Pending Block Number Fallback**: Pool no longer fails to get the blockchain height from
