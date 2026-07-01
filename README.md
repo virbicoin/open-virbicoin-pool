@@ -77,6 +77,12 @@ Clone & compile:
     cd vbc-pool
     go build
 
+The default binary name is `vbc-pool`. Existing deployments that still reference
+the legacy binary name (e.g. a systemd unit running `open-virbicoin-pool`) can keep
+it by building with:
+
+    go build -o open-virbicoin-pool
+
 Install redis-server.
 
 ### Running Pool
