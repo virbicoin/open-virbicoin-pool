@@ -10,7 +10,7 @@ BUILD_TIME := $(shell date -u '+%Y-%m-%d_%H:%M:%S')
 GO := go
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-CGO_ENABLED := 1
+CGO_ENABLED := 0
 
 # Binary name
 BINARY_NAME := vbc-pool
@@ -43,14 +43,14 @@ build:
 	@mkdir -p $(DIST_DIR)
 	CGO_ENABLED=$(CGO_ENABLED) $(GO) build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME) .
 
-# Multi-platform release target (Linux only due to CGO requirements for ethash)
+# Multi-platform release target (pure Go — no CGO / cross toolchain needed)
 release: clean
 	@echo "Building Linux multi-arch release..."
 	@mkdir -p $(RELEASE_DIR)
 	
 	# Linux AMD64
 	@echo "Building for linux/amd64..."
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 $(GO) build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64 .
@@ -58,7 +58,7 @@ release: clean
 	
 	# Linux ARM64
 	@echo "Building for linux/arm64..."
-	CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GO) build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-linux-arm64 .
@@ -66,7 +66,7 @@ release: clean
 	
 	# Windows AMD64
 	@echo "Building for windows/amd64..."
-	CGO_ENABLED=1 GOOS=windows GOARCH=amd64 $(GO) build \
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-windows-amd64.exe .
@@ -74,7 +74,7 @@ release: clean
 	
 	# macOS AMD64
 	@echo "Building for darwin/amd64..."
-	CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GO) build \
+	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-darwin-amd64 .
@@ -82,7 +82,7 @@ release: clean
 	
 	# macOS ARM64 (Apple Silicon)
 	@echo "Building for darwin/arm64..."
-	CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 $(GO) build \
+	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-darwin-arm64 .
@@ -95,7 +95,7 @@ release: clean
 release-optimized: clean
 	@echo "Building optimized release..."
 	@mkdir -p $(RELEASE_DIR)
-	CGO_ENABLED=1 $(GO) build \
+	CGO_ENABLED=0 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-$(GOOS)-$(GOARCH) .
@@ -108,13 +108,13 @@ release-optimized: clean
 build-arm64:
 	@echo "Building $(BINARY_NAME) $(VERSION) for linux/arm64..."
 	@mkdir -p $(DIST_DIR)
-	CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-arm64 .
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(DIST_DIR)/$(BINARY_NAME)-arm64 .
 
 # ARM64 release build
 release-arm64: clean
 	@echo "Building ARM64 release..."
 	@mkdir -p $(RELEASE_DIR)
-	CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GO) build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-linux-arm64 .
@@ -130,7 +130,7 @@ release-linux: clean
 	
 	# Linux AMD64
 	@echo "Building for linux/amd64..."
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 $(GO) build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64 .
@@ -138,7 +138,7 @@ release-linux: clean
 	
 	# Linux ARM64
 	@echo "Building for linux/arm64..."
-	CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GO) build \
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build \
 		-ldflags "-s -w -X main.Version=$(VERSION) -X main.Commit=$(COMMIT) -X main.BuildTime=$(BUILD_TIME)" \
 		-trimpath \
 		-o $(RELEASE_DIR)/$(BINARY_NAME)-$(VERSION)-linux-arm64 .
